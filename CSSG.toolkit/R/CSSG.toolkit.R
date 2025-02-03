@@ -1,4 +1,4 @@
-#' @import dplyr Matrix stringr ggplot2 textclean pheatmap gridExtra doParallel doSNOW foreach
+#' @import parallel dplyr Matrix stringr ggplot2 textclean pheatmap gridExtra doParallel doSNOW foreach
 
 
 firstup <- function(x) {
@@ -2133,6 +2133,23 @@ normalize_data <- function(sc_project, type = 'counts',  factor = 1000000) {
 
 
 
+setClass(
+  "scRNAproject",
+  slots = list(
+    metadata = "list",
+    matrices = "list",
+    names = "list"
+  ),
+
+  prototype = list(
+    metadata = list(),
+    matrices = list(),
+    names = list()
+  )
+)
+
+
+
 #' Create a scRNA Project from a Seurat Object
 #'
 #' This function converts a Seurat object into a custom `scRNAproject` object. It extracts the normalized expression data from the Seurat object, assigns it to the `norm` slot in the matrices of the custom project, and sets the active identities as the names of the cells. This facilitates further analysis using custom functions designed for `scRNAproject` objects.
@@ -2148,22 +2165,6 @@ normalize_data <- function(sc_project, type = 'counts',  factor = 1000000) {
 #' 
 #' @export
 create_project_from_seurat <- function(seurat_project) {
-
-
-  setClass(
-    "scRNAproject",
-    slots = list(
-      metadata = "list",
-      matrices = "list",
-      names = "list"
-    ),
-
-    prototype = list(
-      metadata = list(),
-      matrices = list(),
-      names = list()
-    )
-  )
 
 
 
@@ -2216,21 +2217,6 @@ create_project <- function(sparse_matrix_path, sparse_name, rows_name, cols_name
 
   }
 
-
-  setClass(
-    "scRNAproject",
-    slots = list(
-      metadata = "list",
-      matrices = "list",
-      names = "list"
-    ),
-
-    prototype = list(
-      metadata = list(),
-      matrices = list(),
-      names = list()
-    )
-  )
 
 
   matrices <- list()

@@ -25,4 +25,5 @@ Imports:
     gridExtra,
     doParallel,
     doSNOW,
-    foreach
+    foreach,
+    parallel
