@@ -1,4 +1,4 @@
-#' @import parallel dplyr Matrix stringr ggplot2 textclean pheatmap gridExtra doParallel doSNOW foreach
+#' @import grid parallel dplyr Matrix stringr ggplot2 textclean pheatmap gridExtra doParallel doSNOW foreach
 
 
 firstup <- function(x) {

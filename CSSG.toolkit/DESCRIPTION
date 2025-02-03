@@ -26,4 +26,5 @@ Imports:
     doParallel,
     doSNOW,
     foreach,
-    parallel
+    parallel,
+    grid
