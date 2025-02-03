@@ -767,7 +767,7 @@ outlires <- function(input) {
     theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 9))  # Rotate x-axis labels by 27 degrees
 
 
-  return(list('theresholds' = sort(unique(tmp_input)), 'plot' = plot))
+  return(list('thresholds' = sort(unique(tmp_input)), 'plot' = plot))
 
 }
 
