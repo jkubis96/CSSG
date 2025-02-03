@@ -1,0 +1,28 @@
+Package: CSSG.toolkit
+Type: Package
+Title: Toolkit for implementation of Cell Subtypes Selection on Genes (CSSG) algorithm with cell populations naming
+Version: 0.1.0
+Authors@R: c(
+    person(given = "", 
+           family = "Jakub Kubiś - JBioSystem", 
+           role = c("aut", "cre"), 
+           comment = "Institute of Bioorganic Chemistry, PAS")
+    )
+Author: Jakub Kubiś - JBioSystem; Institute of Bioorganic Chemistry, PAS
+Maintainer: JBioSystem <jbiosystem@gmail.com>
+Description: A comprehensive toolkit providing methods for naming cell clusters, identifying marker genes, and conducting statistical analyses in single-cell RNA sequencing (scRNA-seq) data. These methods support the CSSG algorithm, which precisely subdivides heterogeneous cell clusters by analyzing binary gene occurrence patterns, iteratively selecting optimal gene combinations, and minimizing unexplained cell loss and heterogeneity.
+License: GPL-3
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
+Imports:
+    dplyr,
+    Matrix,
+    stringr,
+    ggplot2,
+    textclean,
+    pheatmap,
+    gridExtra,
+    doParallel,
+    doSNOW,
+    foreach
