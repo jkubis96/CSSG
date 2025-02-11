@@ -821,14 +821,9 @@ genes_variance_calculate <- function(data, min = 0.5) {
 #' gene expression across clusters.
 #'
 #' @param sc_project A single-cell project object containing normalized gene expression data.
-#' @param type A character string specifying the cluster type. Must be one of: 
-#'   'subtypes', 'subclasses', 'cluster', or 'primary'.
-#' @param only_pos A logical value indicating whether to retain only positively differentially 
-#'   expressed genes (TRUE) or include both upregulated and downregulated genes (FALSE). 
-#'   Default is TRUE.
-#' @param min_pct A numeric value specifying the minimum percentage of cells in a cluster that 
-#'   must express a gene for it to be considered. Default is 0.05 (5%).
-#'
+#' @param type A character string specifying the cluster type. Must be one of: 'subtypes', 'subclasses', 'cluster', or 'primary'.
+#' @param only_pos A logical value indicating whether to retain only positively differentially expressed genes (TRUE) or include both upregulated and downregulated genes (FALSE). Default is TRUE.
+#' @param min_pct A numeric value specifying the minimum percentage of cells in a cluster that must express a gene for it to be considered. Default is 0.05.
 #' @return An updated `sc_project` object with marker gene statistics stored in the corresponding 
 #'   metadata slot.
 #'

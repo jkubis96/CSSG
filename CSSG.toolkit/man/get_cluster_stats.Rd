@@ -9,15 +9,11 @@ get_cluster_stats(sc_project, type = NaN, only_pos = TRUE, min_pct = 0.05)
 \arguments{
 \item{sc_project}{A single-cell project object containing normalized gene expression data.}
 
-\item{type}{A character string specifying the cluster type. Must be one of: 
-'subtypes', 'subclasses', 'cluster', or 'primary'.}
+\item{type}{A character string specifying the cluster type. Must be one of: 'subtypes', 'subclasses', 'cluster', or 'primary'.}
 
-\item{only_pos}{A logical value indicating whether to retain only positively differentially 
-expressed genes (TRUE) or include both upregulated and downregulated genes (FALSE). 
-Default is TRUE.}
+\item{only_pos}{A logical value indicating whether to retain only positively differentially expressed genes (TRUE) or include both upregulated and downregulated genes (FALSE). Default is TRUE.}
 
-\item{min_pct}{A numeric value specifying the minimum percentage of cells in a cluster that 
-must express a gene for it to be considered. Default is 0.05 (5%).}
+\item{min_pct}{A numeric value specifying the minimum percentage of cells in a cluster that must express a gene for it to be considered. Default is 0.05.}
 }
 \value{
 An updated `sc_project` object with marker gene statistics stored in the corresponding 
