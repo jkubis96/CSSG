@@ -18,33 +18,33 @@ heterogeneity_select_specificity(
 \arguments{
 \item{sc_project}{A single-cell project object containing normalized gene expression data.}
 
-\item{type}{A character string specifying the cluster type. Must be one of: 
+\item{type}{A character string specifying the cluster type. Must be one of:
 'subtypes', 'subclasses', 'cluster', or 'primary'.}
 
-\item{heterogeneity_factor}{A numeric value defining the maximum percentage of cells in a 
+\item{heterogeneity_factor}{A numeric value defining the maximum percentage of cells in a
 cluster expressing a gene for it to be considered heterogeneous. Default is 80.}
 
-\item{p_val}{A numeric value specifying the p-value threshold for gene selection. 
+\item{p_val}{A numeric value specifying the p-value threshold for gene selection.
 Default is 0.05.}
 
-\item{max_genes}{A numeric value defining the maximum number of genes to retain per cluster. 
+\item{max_genes}{A numeric value defining the maximum number of genes to retain per cluster.
 Default is 1000.}
 
-\item{select_stat}{A character string specifying the ranking statistic for gene selection. 
+\item{select_stat}{A character string specifying the ranking statistic for gene selection.
 Options: 'p_val' (default), 'avg_logFC', or 'avg_log2FC'.}
 
-\item{min_occ}{A numeric value specifying the minimum percentage occurrence of a gene in a cluster. 
+\item{min_occ}{A numeric value specifying the minimum percentage occurrence of a gene in a cluster.
 Default is 5.}
 
-\item{mito_content}{A logical value indicating whether to include mitochondrial genes in the selection. 
+\item{mito_content}{A logical value indicating whether to include mitochondrial genes in the selection.
 Default is FALSE.}
 }
 \value{
-An updated `sc_project` object with identified heterogeneity marker genes stored 
+An updated `sc_project` object with identified heterogeneity marker genes stored
   in the `metadata$heterogeneity_markers` slot.
 }
 \description{
-Identifies cluster-specific marker genes by considering gene expression heterogeneity, 
+Identifies cluster-specific marker genes by considering gene expression heterogeneity,
 statistical significance, and occurrence thresholds.
 }
 \details{
@@ -60,7 +60,7 @@ The function performs the following steps:
   - Stores the final marker gene lists in `sc_project@metadata$heterogeneity_markers`.
 }
 \examples{
-updated_project <- heterogeneity_select_specificity(sc_project, type = "subtypes", 
+updated_project <- heterogeneity_select_specificity(sc_project, type = "subtypes",
   heterogeneity_factor = 75, p_val = 0.01, max_genes = 500, select_stat = "avg_logFC")
 
 }

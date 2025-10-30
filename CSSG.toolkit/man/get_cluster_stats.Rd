@@ -16,11 +16,11 @@ get_cluster_stats(sc_project, type = NaN, only_pos = TRUE, min_pct = 0.05)
 \item{min_pct}{A numeric value specifying the minimum percentage of cells in a cluster that must express a gene for it to be considered. Default is 0.05.}
 }
 \value{
-An updated `sc_project` object with marker gene statistics stored in the corresponding 
+An updated `sc_project` object with marker gene statistics stored in the corresponding
   metadata slot.
 }
 \description{
-Identifies marker genes for specified cluster types in a single-cell dataset by comparing 
+Identifies marker genes for specified cluster types in a single-cell dataset by comparing
 gene expression across clusters.
 }
 \details{

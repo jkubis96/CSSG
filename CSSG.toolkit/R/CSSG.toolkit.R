@@ -6,9 +6,9 @@ firstup <- function(x) {
   set.seed(123)
 
   substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  
+
   return(x)
-  
+
 }
 
 
@@ -84,10 +84,10 @@ cluster_naming <- function(matrix_a, markers) {
 #' @param CSSG_df A data frame containing CSSG information, including loss values and adjustment metrics.
 #' @param species A character string specifying the species (default: 'Homo sapiens').
 #' @return A character vector of cluster names.
-#' 
+#'
 #' @examples
 #' cssg_naming(sparse_matrix, CSSG_df)
-#' 
+#'
 #' @export
 cssg_naming <- function(sparse_matrix, CSSG_df, species = 'Homo sapiens') {
 
@@ -221,10 +221,10 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
 #' @param species A character string specifying the species (default: 'Homo sapiens'), which determines the structure of the names.
 #' @param chunk_size Numeric. Size of chunks for processing large datasets (default: 5000).
 #' @return The updated `sc_project` object with assigned subtypes.
-#' 
+#'
 #' @examples
 #' subtypes_naming(sc_project, markers_class, markers_subclass, species = "Homo sapiens", chunk_size = 500)
-#' 
+#'
 #' @export
 subtypes_naming <- function(sc_project, markers_class = NULL, markers_subclass = NULL, species = 'Homo sapiens', chunk_size = 5000) {
 
@@ -278,10 +278,10 @@ subtypes_naming <- function(sc_project, markers_class = NULL, markers_subclass =
 #' @param p_val Numeric. The significance threshold for p-values.
 #' @param min_cells Numeric. Minimum number of cells required for significance (default: 10).
 #' @return A list containing test results and categorized cell types.
-#' 
+#'
 #' @examples
 #' bin_cell_test(names, p_val = 0.05)
-#' 
+#'
 #' @export
 bin_cell_test <- function(names, p_val, min_cells = 10) {
 
@@ -347,10 +347,10 @@ bin_cell_test <- function(names, p_val, min_cells = 10) {
 #' @param data A data frame containing cell type counts and significance categories.
 #' @param include_ns Logical. Whether to include non-significant cell types in the graph (default: TRUE).
 #' @return A ggplot object representing the bar plot.
-#' 
+#'
 #' @examples
 #' cell_stat_graph(data, include_ns = TRUE)
-#' 
+#'
 #' @export
 cell_stat_graph <- function(data, include_ns = TRUE) {
 
@@ -486,10 +486,10 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
 #' @param sparse_matrix A sparse matrix containing gene expression data.
 #' @param chunk_size The maximum number of cells per processing batch (default: 5000).
 #' @return A data frame containing aggregated gene expression values.
-#' 
+#'
 #' @examples
 #' aggregated_data <- aggregation_num(sparse_matrix)
-#' 
+#'
 #' @export
 aggregation_num <- function(sparse_matrix, chunk_size = 5000) {
 
@@ -578,10 +578,10 @@ aggregation_num <- function(sparse_matrix, chunk_size = 5000) {
 #' @param sparse_matrix A sparse matrix containing gene expression data.
 #' @param chunk_size The maximum number of cells per processing batch (default: 5000).
 #' @return A data frame containing aggregated gene expression values.
-#' 
+#'
 #' @examples
 #' aggregated_data <- aggregation_chr(sparse_matrix)
-#' 
+#'
 #' @export
 aggregation_chr <- function(sparse_matrix, chunk_size = 5000) {
 
@@ -668,10 +668,10 @@ aggregation_chr <- function(sparse_matrix, chunk_size = 5000) {
 #'
 #' @param input A numeric vector containing values to be analyzed.
 #' @return A list containing a sorted vector of detected outliers and a ggplot2 histogram visualization.
-#' 
+#'
 #' @examples
 #' outlier_data <- outlires(c(1, 5, 10, 20, 30, 100, 150, 200))
-#' 
+#'
 #' @export
 outlires <- function(input) {
 
@@ -785,10 +785,10 @@ outlires <- function(input) {
 #' @param data A matrix of gene expression values where rows represent genes and columns represent samples.
 #' @param min A numeric value specifying the threshold for counting occurrences (default: 0.5).
 #' @return A data frame containing gene names, variance, mean expression, and percentage occurrence.
-#' 
+#'
 #' @examples
 #' variance_data <- genes_variance_calculate(expression_matrix)
-#' 
+#'
 #' @export
 genes_variance_calculate <- function(data, min = 0.5) {
   set.seed(123)
@@ -817,14 +817,14 @@ genes_variance_calculate <- function(data, min = 0.5) {
 
 #' Cluster Marker Gene Identification
 #'
-#' Identifies marker genes for specified cluster types in a single-cell dataset by comparing 
+#' Identifies marker genes for specified cluster types in a single-cell dataset by comparing
 #' gene expression across clusters.
 #'
 #' @param sc_project A single-cell project object containing normalized gene expression data.
 #' @param type A character string specifying the cluster type. Must be one of: 'subtypes', 'subclasses', 'cluster', or 'primary'.
 #' @param only_pos A logical value indicating whether to retain only positively differentially expressed genes (TRUE) or include both upregulated and downregulated genes (FALSE). Default is TRUE.
 #' @param min_pct A numeric value specifying the minimum percentage of cells in a cluster that must express a gene for it to be considered. Default is 0.05.
-#' @return An updated `sc_project` object with marker gene statistics stored in the corresponding 
+#' @return An updated `sc_project` object with marker gene statistics stored in the corresponding
 #'   metadata slot.
 #'
 #' @details The function performs the following steps:
@@ -864,15 +864,17 @@ get_cluster_stats <- function(sc_project, type = NaN,  only_pos = TRUE, min_pct 
 
     names <- sc_project@names$subclass
 
-    slot = 'clusters_markers'
 
   } else if (type == 'cluster') {
 
+    slot = 'clusters_markers'
+
     names <- sc_project@names$cluster
 
-    slot = 'primary_markers'
 
   } else if (type == 'primary') {
+
+    slot = 'primary_markers'
 
     names <- sc_project@names$primary
 
@@ -955,26 +957,26 @@ get_cluster_stats <- function(sc_project, type = NaN,  only_pos = TRUE, min_pct 
 
 #' Select Cluster-Specific Marker Genes Based on Heterogeneity
 #'
-#' Identifies cluster-specific marker genes by considering gene expression heterogeneity, 
+#' Identifies cluster-specific marker genes by considering gene expression heterogeneity,
 #' statistical significance, and occurrence thresholds.
 #'
 #' @param sc_project A single-cell project object containing normalized gene expression data.
-#' @param type A character string specifying the cluster type. Must be one of: 
+#' @param type A character string specifying the cluster type. Must be one of:
 #'   'subtypes', 'subclasses', 'cluster', or 'primary'.
-#' @param heterogeneity_factor A numeric value defining the maximum percentage of cells in a 
+#' @param heterogeneity_factor A numeric value defining the maximum percentage of cells in a
 #'   cluster expressing a gene for it to be considered heterogeneous. Default is 80.
-#' @param p_val A numeric value specifying the p-value threshold for gene selection. 
+#' @param p_val A numeric value specifying the p-value threshold for gene selection.
 #'   Default is 0.05.
-#' @param max_genes A numeric value defining the maximum number of genes to retain per cluster. 
+#' @param max_genes A numeric value defining the maximum number of genes to retain per cluster.
 #'   Default is 1000.
-#' @param select_stat A character string specifying the ranking statistic for gene selection. 
+#' @param select_stat A character string specifying the ranking statistic for gene selection.
 #'   Options: 'p_val' (default), 'avg_logFC', or 'avg_log2FC'.
-#' @param min_occ A numeric value specifying the minimum percentage occurrence of a gene in a cluster. 
+#' @param min_occ A numeric value specifying the minimum percentage occurrence of a gene in a cluster.
 #'   Default is 5.
-#' @param mito_content A logical value indicating whether to include mitochondrial genes in the selection. 
+#' @param mito_content A logical value indicating whether to include mitochondrial genes in the selection.
 #'   Default is FALSE.
 #'
-#' @return An updated `sc_project` object with identified heterogeneity marker genes stored 
+#' @return An updated `sc_project` object with identified heterogeneity marker genes stored
 #'   in the `metadata$heterogeneity_markers` slot.
 #'
 #' @details The function performs the following steps:
@@ -989,7 +991,7 @@ get_cluster_stats <- function(sc_project, type = NaN,  only_pos = TRUE, min_pct 
 #'   - Stores the final marker gene lists in `sc_project@metadata$heterogeneity_markers`.
 #'
 #' @examples
-#' updated_project <- heterogeneity_select_specificity(sc_project, type = "subtypes", 
+#' updated_project <- heterogeneity_select_specificity(sc_project, type = "subtypes",
 #'   heterogeneity_factor = 75, p_val = 0.01, max_genes = 500, select_stat = "avg_logFC")
 #'
 #' @export
@@ -1018,15 +1020,17 @@ heterogeneity_select_specificity <- function(sc_project, type = NaN, heterogenei
 
     names <- sc_project@names$subclass
 
-    slot = 'clusters_markers'
 
   } else if (type == 'cluster') {
 
+    slot = 'clusters_markers'
+
     names <- sc_project@names$cluster
 
-    slot = 'primary_markers'
 
   } else if (type == 'primary') {
+
+    slot = 'primary_markers'
 
     names <- sc_project@names$primary
 
@@ -1188,24 +1192,24 @@ heterogeneity_select_specificity <- function(sc_project, type = NaN, heterogenei
 
 #' Select Marker Genes Based on Expression Variance and Heterogeneity
 #'
-#' Identifies cluster-specific marker genes using expression variance, occurrence thresholds, 
+#' Identifies cluster-specific marker genes using expression variance, occurrence thresholds,
 #' and heterogeneity factors.
 #'
 #' @param sc_project A single-cell project object containing normalized gene expression data.
-#' @param heterogeneity_factor A numeric value defining the maximum percentage of cells in a 
+#' @param heterogeneity_factor A numeric value defining the maximum percentage of cells in a
 #'   cluster expressing a gene for it to be considered heterogeneous. Default is 80.
-#' @param max_genes A numeric value defining the maximum number of genes to retain per cluster. 
+#' @param max_genes A numeric value defining the maximum number of genes to retain per cluster.
 #'   Default is 1000.
-#' @param min_occ A numeric value specifying the minimum percentage occurrence of a gene in a cluster. 
+#' @param min_occ A numeric value specifying the minimum percentage occurrence of a gene in a cluster.
 #'   Default is 5.
-#' @param min_exp A numeric value specifying the minimum expression level threshold for considering 
+#' @param min_exp A numeric value specifying the minimum expression level threshold for considering
 #'   a gene in the variance calculation. Default is 0.1.
-#' @param rep_factor A numeric value defining the replication threshold for filtering genes appearing 
+#' @param rep_factor A numeric value defining the replication threshold for filtering genes appearing
 #'   in multiple clusters. Default is 0.5.
-#' @param mito_content A logical value indicating whether to include mitochondrial genes in the selection. 
+#' @param mito_content A logical value indicating whether to include mitochondrial genes in the selection.
 #'   Default is FALSE.
 #'
-#' @return An updated `sc_project` object with selected heterogeneity marker genes stored in 
+#' @return An updated `sc_project` object with selected heterogeneity marker genes stored in
 #'   `metadata$heterogeneity_markers`.
 #'
 #' @details The function performs the following steps:
@@ -1218,7 +1222,7 @@ heterogeneity_select_specificity <- function(sc_project, type = NaN, heterogenei
 #'   - Stores the final gene list in `sc_project@metadata$heterogeneity_markers`.
 #'
 #' @examples
-#' updated_project <- heterogeneity_select_variance(sc_project, heterogeneity_factor = 50, 
+#' updated_project <- heterogeneity_select_variance(sc_project, heterogeneity_factor = 50,
 #'   max_genes = 200, min_occ = 10, min_exp = 0.2, rep_factor = 0.4)
 #'
 #' @export
@@ -1801,7 +1805,7 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
 #' @param y_axis A string specifying the y-axis label (default: 'Genes [log(CPM +1)]').
 #'
 #' @return A recorded plot object containing the generated heatmap.
-#' 
+#'
 #' @export
 marker_heatmap <- function(sc_project, type = 'subtypes',  markers = c(), angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]') {
 
@@ -1844,7 +1848,7 @@ marker_heatmap <- function(sc_project, type = 'subtypes',  markers = c(), angle_
 #' @examples
 #' markers <- get_names_markers(sc_project, type = 'subtypes')
 #' print(markers)
-#' 
+#'
 #' @export
 get_names_markers <- function(sc_project, type = 'subtypes') {
 
@@ -1870,15 +1874,17 @@ get_names_markers <- function(sc_project, type = 'subtypes') {
 
     names <- sc_project@names$subclass
 
-    slot = 'clusters_markers'
 
   } else if (type == 'cluster') {
 
+    slot = 'clusters_markers'
+
     names <- sc_project@names$cluster
 
-    slot = 'primary_markers'
 
   } else if (type == 'primary') {
+
+    slot = 'primary_markers'
 
     names <- sc_project@names$primary
 
@@ -1904,11 +1910,11 @@ get_names_markers <- function(sc_project, type = 'subtypes') {
 #' @param chunk_size An integer defining the chunk size for data aggregation. Default is 5000.
 #'
 #' @return A matrix or data frame with aggregated expression values.
-#' 
+#'
 #'
 #' @examples
 #' avg_data <- get_avg_data(sc_project, type = 'subtypes', data = 'norm')
-#' 
+#'
 #' @export
 get_avg_data <- function(sc_project, type = 'subtypes', data = 'norm', chunk_size = 5000) {
 
@@ -1942,11 +1948,11 @@ get_avg_data <- function(sc_project, type = 'subtypes', data = 'norm', chunk_siz
 #' @param data A string specifying the type of expression data to retrieve. Accepted values are 'norm' (normalized) or 'count' (raw counts).
 #'
 #' @return A sparse matrix of the specified expression data, with appropriate cell names assigned based on the chosen `type`.
-#' 
+#'
 #' @examples
 #' norm_data <- get_data(sc_project, type = 'subtypes', data = 'norm')
 #' count_data <- get_data(sc_project, type = 'subclasses', data = 'count')
-#' 
+#'
 #' @export
 get_data <- function(sc_project, type = 'subtypes', data = 'norm') {
 
@@ -2005,7 +2011,7 @@ get_data <- function(sc_project, type = 'subtypes', data = 'norm') {
 
 #' Subset a Single-Cell Project Based on Specific Groupings and Select List
 #'
-#' This function subsets a single-cell RNA-seq project object by selecting specific groups (subtypes, subclasses, clusters, or primary) based on the provided `select_list`. 
+#' This function subsets a single-cell RNA-seq project object by selecting specific groups (subtypes, subclasses, clusters, or primary) based on the provided `select_list`.
 #' Only the cells that belong to the specified `select_list` are retained in the matrices and names within the `sc_project`.
 #'
 #' @param sc_project An object containing single-cell RNA-seq data that has been preprocessed and categorized.
@@ -2013,7 +2019,7 @@ get_data <- function(sc_project, type = 'subtypes', data = 'norm') {
 #' @param select_list A character vector of names or identifiers to be selected. Only cells belonging to these groups will be kept in the subset.
 #'
 #' @return A modified `sc_project` object with only the cells that match the selected groups and identifiers.
-#' 
+#'
 #' @export
 #'
 #' @examples
@@ -2081,7 +2087,7 @@ subset_project <- function(sc_project, type = 'subtypes', select_list = c()) {
 
 #' Normalize Single-Cell RNA-seq Data
 #'
-#' This function normalizes the count matrix of a single-cell RNA-seq project by applying a log transformation to the data. The normalization is based on either 'counts' or 'genes' and scales the data by a specified factor (default is 1,000,000). 
+#' This function normalizes the count matrix of a single-cell RNA-seq project by applying a log transformation to the data. The normalization is based on either 'counts' or 'genes' and scales the data by a specified factor (default is 1,000,000).
 #' The log transformation is calculated using the formula: log2((count / gene counts) * factor + 1).
 #'
 #' @param sc_project An object containing single-cell RNA-seq data with pre-existing count matrices.
@@ -2093,7 +2099,7 @@ subset_project <- function(sc_project, type = 'subtypes', select_list = c()) {
 #' @examples
 #' normalized_project <- normalize_data(sc_project, type = 'counts', factor = 1000000)
 #' normalized_project <- normalize_data(sc_project, type = 'genes', factor = 10000)
-#' 
+#'
 #' @export
 normalize_data <- function(sc_project, type = 'counts',  factor = 1000000) {
   set.seed(123)
@@ -2157,7 +2163,7 @@ setClass(
 #'
 #' @examples
 #' sc_project <- create_project_from_seurat(seurat_project)
-#' 
+#'
 #' @export
 create_project_from_seurat <- function(seurat_project) {
 
@@ -2199,10 +2205,10 @@ create_project_from_seurat <- function(seurat_project) {
 #' @details
 #' The function reads the sparse matrix and its associated row and column name files (typically in `.tsv` format). It creates a custom `scRNAproject` object and assigns the data to appropriate slots for easy access and analysis.
 #'
-#' 
+#'
 #' @examples
 #' sc_project <- create_project("/path/to/data", "matrix_data", "genes", "cells")
-#' 
+#'
 #' @export
 create_project <- function(sparse_matrix_path, sparse_name, rows_name, cols_name, type = 'count') {
 
@@ -2241,7 +2247,7 @@ create_project <- function(sparse_matrix_path, sparse_name, rows_name, cols_name
 #' @param dim_stats A list or data frame containing the standard deviation (or eigenvalue) for each principal component. Typically, this will be from the PCA analysis output, with the relevant data stored in `dims$Elbow$data$stdev`.
 #'
 #' @return A numeric value indicating the optimal number of principal components (PCs) to retain based on the elbow method.
-#'   
+#'
 #' @details
 #' The function iterates through the standard deviations of each principal component and applies thresholds to detect when the variance between consecutive components begins to decrease sharply. This is often interpreted as the "elbow" in a scree plot, which represents the point where additional components contribute much less variance to the model.
 #'
@@ -2249,7 +2255,7 @@ create_project <- function(sparse_matrix_path, sparse_name, rows_name, cols_name
 #' @examples
 #' # Assuming `dims$Elbow$data$stdev` contains standard deviation values for the PCs
 #' optimal_pcs <- dim_reuction_pcs(dims$Elbow$data$stdev)
-#' 
+#'
 #' @export
 dim_reuction_pcs <- function(dim_stats) {
 
@@ -2277,7 +2283,7 @@ dim_reuction_pcs <- function(dim_stats) {
 #'
 #' This function assigns meaningful names to subclasses and classes based on clustering and heterogeneity markers in a single-cell RNA sequencing project. It uses information about heterogeneity, class markers, and subclass markers to perform the annotation. It updates the subclass names in the `scRNAproject` object by combining cluster names with subclass names, based on the provided markers and species. This function assumes that clustering information and heterogeneity markers are already present in the `scRNAproject` metadata.
 #' The structure of manually curated marker data, including marker class and marker subclass, is available on the GitHub page: https://github.com/jkubis96/CSSG. If set to NULL by default, the names will be based on specific markers for the clusters.
-#' 
+#'
 #' @param sc_project An object of class `scRNAproject`, which contains the data and metadata required for subclass and class naming. It should include matrices with normalized gene expression data and metadata related to heterogeneity markers.
 #' @param markers_class A list of class markers (default: NULL). If NULL the cluster will obtain native names from 'sc_project@names$primary' or 'sc_project@names$cluster'
 #' @param markers_subclass A list of subclass markers (default: NULL). If NULL the markers will used from 'sc_project@metadata$heterogeneity_markers'

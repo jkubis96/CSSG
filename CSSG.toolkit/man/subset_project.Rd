@@ -17,7 +17,7 @@ subset_project(sc_project, type = "subtypes", select_list = c())
 A modified `sc_project` object with only the cells that match the selected groups and identifiers.
 }
 \description{
-This function subsets a single-cell RNA-seq project object by selecting specific groups (subtypes, subclasses, clusters, or primary) based on the provided `select_list`. 
+This function subsets a single-cell RNA-seq project object by selecting specific groups (subtypes, subclasses, clusters, or primary) based on the provided `select_list`.
 Only the cells that belong to the specified `select_list` are retained in the matrices and names within the `sc_project`.
 }
 \examples{

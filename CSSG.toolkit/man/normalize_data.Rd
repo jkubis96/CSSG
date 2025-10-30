@@ -17,7 +17,7 @@ normalize_data(sc_project, type = "counts", factor = 1e+06)
 A modified `sc_project` object with normalized data stored in the `@matrices$norm` slot.
 }
 \description{
-This function normalizes the count matrix of a single-cell RNA-seq project by applying a log transformation to the data. The normalization is based on either 'counts' or 'genes' and scales the data by a specified factor (default is 1,000,000). 
+This function normalizes the count matrix of a single-cell RNA-seq project by applying a log transformation to the data. The normalization is based on either 'counts' or 'genes' and scales the data by a specified factor (default is 1,000,000).
 The log transformation is calculated using the formula: log2((count / gene counts) * factor + 1).
 }
 \examples{
