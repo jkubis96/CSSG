@@ -149,12 +149,10 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
 
 
 
-    cluster <- 0
     cell_names.2 <- c()
     for (col in 1:length(colnames(average_expression))) {
-      tmp_names <- cell_markers[as.character(cell_markers$cluster) %in% as.character(colnames(average_expression)[cluster]),]
+      tmp_names <- cell_markers[as.character(cell_markers$cluster) %in% as.character(colnames(average_expression)[col]),]
       tmp_names <- as.data.frame(tmp_names[order(tmp_names$pct_occurrence, decreasing = T), ,drop = F])
-      cluster <- cluster + 1
       if (!toupper(cell_names.1[col]) %in% toupper(tmp_names$gene[1])) {
         cell_names.2[col] <- firstup(tolower(tmp_names$gene[1]))
       } else if (toupper(cell_names.1[col]) %in% toupper(tmp_names$gene[1])) {
@@ -910,12 +908,12 @@ get_cluster_stats <- function(sc_project, type = NaN,  only_pos = TRUE, min_pct 
     tmp2 = data[,!colnames(data) %in% c]
     tmp_sum <- tmp1
     tmp_sum[tmp_sum > 0] <- 1
-    tmp_results$perc <- rowSums(tmp_sum)/ncol(tmp_sum)
+    tmp_results$pct_occurrence <- rowSums(tmp_sum)/ncol(tmp_sum)
     rm(tmp_sum)
     t1 = rowMeans(tmp1)
     t2 = rowMeans(tmp2)
     tmp_results$avg_logFC <- log2((t1 + (min(t1[t1 > 0])/2))  / (t2 + (min(t2[t2 > 0])/2)))
-    tmp_results <- tmp_results[tmp_results$perc > min_pct, , drop = FALSE]
+    tmp_results <- tmp_results[tmp_results$pct_occurrence > min_pct, , drop = FALSE]
 
 
 

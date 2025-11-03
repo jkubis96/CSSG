@@ -1,7 +1,7 @@
 Package: CSSG.toolkit
 Type: Package
 Title: Toolkit for implementation of Cell Subtypes Selection on Genes (CSSG) algorithm with cell populations naming
-Version: 0.1.0
+Version: 0.1.2
 Authors@R: c(
     person(given = "", 
            family = "Jakub Kubiś - JBioSystem", 
