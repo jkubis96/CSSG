@@ -382,7 +382,7 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
   sparse_matrix = sc_project@matrices$norm
   colnames(sparse_matrix) <- sc_project@names$subtypes
 
-  cluster_heterogeneity_markers <- sc_project@metadata$heterogeneity_markers$marker_df
+  cluster_heterogeneity_markers <- sc_project@metadata$naming_markers
 
   if (is.null(cluster_heterogeneity_markers) ||
       (is.atomic(cluster_heterogeneity_markers) && all(is.na(cluster_heterogeneity_markers))) ||
@@ -435,7 +435,6 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
   colnames(agg_subclasses) <- changed_names
 
   clust_names <- cluster_naming(matrix_a = agg_subclasses, markers = markers_class)
-
 
   cell_names_2 <- subcluster_naming(agg_subclasses, markers_subclass, cluster_heterogeneity_markers, species)
 
@@ -2306,7 +2305,7 @@ dim_reuction_pcs <- function(dim_stats) {
 subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers = NULL, species = 'Homo sapiens', chunk_size = 5000) {
 
 
-  cluster_heterogeneity_markers <- sc_project@metadata$heterogeneity_markers$marker_df
+  cluster_heterogeneity_markers <- sc_project@metadata$naming_markers
 
   if (is.null(cluster_heterogeneity_markers) ||
       (is.atomic(cluster_heterogeneity_markers) && all(is.na(cluster_heterogeneity_markers))) ||
@@ -2346,8 +2345,6 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
   }
 
 
-
-
   clust_names <- cluster_naming(matrix_a = agg_subclasses, markers = class_markers)
 
   old_clusters <- as.character(colnames(agg_subclasses))
@@ -2376,3 +2373,143 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 
 }
 
+
+
+#' Select Marker Genes for Naming Cell Clusters
+#'
+#' Identifies representative marker genes for cell cluster naming by considering
+#' statistical significance, gene occurrence, and removal of undesired gene
+#' classes (mitochondrial/ribosomal).
+#'
+#' @param sc_project A single-cell project object containing marker gene metadata.
+#' @param type A character string specifying the marker category to use. Must be one of:
+#'   'subtypes', 'subclasses', 'cluster', or 'primary' (default).
+#' @param top_n A numeric value specifying the maximum number of marker genes to retain per cluster.
+#'   Default is 25.
+#' @param p_val A numeric value specifying the p-value threshold for marker selection.
+#'   Default is 0.05.
+#' @param select_stat A character string specifying the statistic used to rank genes.
+#'   Options: 'p_val' (default) or 'avg_logFC'.
+#' @param mito_content A logical value indicating whether to include mitochondrial genes.
+#'   Default is FALSE.
+#' @param ribo_content A logical value indicating whether to include ribosomal genes.
+#'   Default is FALSE.
+#'
+#' @return An updated `sc_project` object with selected naming marker genes stored
+#'   in the `metadata$naming_markers` slot.
+#'
+#' @details The function performs the following steps:
+#'   - Validates the `type` parameter and selects appropriate marker metadata.
+#'   - Filters genes based on p-value.
+#'   - Optionally removes mitochondrial and ribosomal genes.
+#'   - Ranks genes by cluster based on occurrence, p-value, and log fold change.
+#'   - Selects the top `top_n` genes per cluster.
+#'   - Removes duplicated genes across clusters to improve naming specificity.
+#'   - Ensures each cluster retains at least two marker genes.
+#'
+#' @examples
+#' sc_project <- namign_genes_selection(sc_project,
+#'   type = "primary",
+#'   top_n = 25,
+#'   p_val = 0.05,
+#'   mito_content = FALSE,
+#'   ribo_content = FALSE
+#' )
+#'
+#' @export
+namign_genes_selection <- function (sc_project, type = 'primary', top_n = 25,
+                                    p_val = 0.05, select_stat = "p_val",
+                                    mito_content = FALSE, ribo_content = FALSE)
+{
+  set.seed(123)
+
+  markers <- sc_project@metadata$primary_markers
+
+  if (!type %in% c("subtypes", "subclasses", "cluster", "primary")) {
+    stop("Invalid `type` provided. The `type` parameter should be either 'subtypes' or 'subclasses' or 'cluster' or 'primary'")
+  }
+
+  if (type == "subtypes") {
+    markers <- sc_project@metadata$subtypes_markers
+
+  } else if (type == "subclasses") {
+    markers <- sc_project@metadata$subclasses_markers
+
+  } else if (type == "cluster") {
+    markers <- sc_project@metadata$clusters_markers
+
+  } else if (type == "primary") {
+    markers <- sc_project@metadata$primary_markers
+  }
+
+
+  if (mito_content == FALSE) {
+
+    markers <- markers %>%
+      group_by(cluster) %>%
+      group_modify(~{
+        mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
+
+        cleaned <- .x[!mt_idx, , drop = FALSE]
+
+        if (nrow(cleaned) == 0) {
+          return(.x[mt_idx, , drop = FALSE])
+        } else {
+          return(cleaned)
+        }
+      }) %>%
+      ungroup()
+
+  }
+
+  if (ribo_content == FALSE) {
+    markers <- markers %>%
+      group_by(cluster) %>%
+      group_modify(~{
+
+        ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
+
+        cleaned <- .x[!ribo_idx, , drop = FALSE]
+
+        if (nrow(cleaned) == 0) {
+          return(.x[ribo_idx, , drop = FALSE])
+        } else {
+          return(cleaned)
+        }
+      }) %>%
+      ungroup()
+
+  }
+
+
+  marker_df <- markers[markers$p_val < p_val, ]
+
+  marker_df <- marker_df %>%
+    group_by(cluster) %>%
+    arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
+    slice_head(n = top_n)
+
+
+  dup_genes <- marker_df$genes[duplicated(marker_df$genes) | duplicated(marker_df$genes, fromLast = TRUE)]
+
+  marker_clean <- marker_df %>%
+    group_by(cluster) %>%
+    group_modify(~{
+      cleaned <- .x %>% filter(!genes %in% dup_genes)
+
+      if (nrow(cleaned) < 2) {
+        .x %>%
+          arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
+          slice_head(n = 2)
+      } else {
+        cleaned
+      }
+    }) %>%
+    ungroup()
+
+
+
+  sc_project@metadata$naming_markers <- marker_clean
+
+  return(sc_project)
+}
