@@ -325,9 +325,10 @@ bin_cell_test <- function(names, p_val, min_cells = 10) {
   below.names <- data$names[data$p_val > p_val]
   data$test[data$names %in% new.subnames] <- "Good marked types"
   data$test[data$names %in% renamed.subnames] <- "Renamed"
-  data$test[data$names %in% 'Undefined'] <- "Undefined types"
   data$test[data$names %in% below.names] <- "Non-significant"
   data$test[data$n < min_cells] <- "Non-significant"
+  data$test[data$names %in% 'Undefined'] <- "Undefined types"
+
 
 
   return(list('data' = data, 'below.names' = below.names, 'bad.subnames' = bad.subnames))
