@@ -14,7 +14,8 @@ marker_heatmap(
   font_labels = 8,
   clustering_method = "complete",
   x_axis = "Cells",
-  y_axis = "Genes [log(CPM +1)]"
+  y_axis = "Genes [log(CPM +1)]",
+  scale = FALSE
 )
 }
 \arguments{
@@ -37,6 +38,8 @@ marker_heatmap(
 \item{x_axis}{A string specifying the x-axis label (default: 'Cells').}
 
 \item{y_axis}{A string specifying the y-axis label (default: 'Genes [log(CPM +1)]').}
+
+\item{scale}{Logical. If TRUE, performs Min-Max scaling (0–1) across numeric columns (default: FALSE).}
 }
 \value{
 A recorded plot object containing the generated heatmap.

@@ -1801,17 +1801,35 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
 #' @param clustering_method A string specifying the clustering method for hierarchical clustering (default: 'complete').
 #' @param x_axis A string specifying the x-axis label (default: 'Cells').
 #' @param y_axis A string specifying the y-axis label (default: 'Genes [log(CPM +1)]').
+#' @param scale Logical. If TRUE, performs Min-Max scaling (0–1) across numeric columns (default: FALSE).
 #'
 #' @return A recorded plot object containing the generated heatmap.
 #'
 #' @export
-marker_heatmap <- function(sc_project, type = 'subtypes',  markers = c(), angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]') {
+marker_heatmap <- function(sc_project,
+                           type = 'subtypes',
+                           markers = c(),
+                           angle_col = 270,
+                           fontsize_row = 7,
+                           fontsize_col = 7,
+                           font_labels = 8,
+                           clustering_method = 'complete',
+                           x_axis = 'Cells',
+                           y_axis = 'Genes [log(CPM +1)]',
+                           scale = FALSE) {
 
   set.seed(123)
 
   data <- get_avg_data(sc_project = sc_project, type = type, data = 'norm', chunk_size = 5000)
 
   data <- data[toupper(rownames(data)) %in% markers, , drop = FALSE]
+
+  if (scale) {
+
+    data <- data %>%
+      mutate(across(where(is.numeric), ~ (. - min(.)) / (max(.) - min(.))))
+
+  }
 
   pheat <- pheatmap::pheatmap(
     data,
