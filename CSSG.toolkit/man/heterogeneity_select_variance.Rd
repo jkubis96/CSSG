@@ -10,7 +10,7 @@ heterogeneity_select_variance(
   max_genes = 1000,
   min_occ = 5,
   min_exp = 0.1,
-  rep_factor = 0.5,
+  rep_factor = 0.1,
   mito_content = FALSE
 )
 }

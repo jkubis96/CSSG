@@ -4,12 +4,12 @@
 \alias{genes_variance_calculate}
 \title{Gene Variance Calculation}
 \usage{
-genes_variance_calculate(data, min = 0.5)
+genes_variance_calculate(data, min = 0.1)
 }
 \arguments{
 \item{data}{A matrix of gene expression values where rows represent genes and columns represent samples.}
 
-\item{min}{A numeric value specifying the threshold for counting occurrences (default: 0.5).}
+\item{min}{A numeric value specifying the threshold for counting occurrences (default: 0.1).}
 }
 \value{
 A data frame containing gene names, variance, mean expression, and percentage occurrence.

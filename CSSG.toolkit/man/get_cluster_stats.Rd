@@ -4,7 +4,7 @@
 \alias{get_cluster_stats}
 \title{Cluster Marker Gene Identification}
 \usage{
-get_cluster_stats(sc_project, type = NaN, only_pos = TRUE, min_pct = 0.05)
+get_cluster_stats(sc_project, type = NaN, only_pos = TRUE, min_pct = 0.1)
 }
 \arguments{
 \item{sc_project}{A single-cell project object containing normalized gene expression data.}

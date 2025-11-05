@@ -781,33 +781,25 @@ outlires <- function(input) {
 #' Calculates the variance, mean, and percentage occurrence of gene expressions across samples.
 #'
 #' @param data A matrix of gene expression values where rows represent genes and columns represent samples.
-#' @param min A numeric value specifying the threshold for counting occurrences (default: 0.5).
+#' @param min A numeric value specifying the threshold for counting occurrences (default: 0.1).
 #' @return A data frame containing gene names, variance, mean expression, and percentage occurrence.
 #'
 #' @examples
 #' variance_data <- genes_variance_calculate(expression_matrix)
 #'
 #' @export
-genes_variance_calculate <- function(data, min = 0.5) {
+genes_variance_calculate <- function (data, min = 0.1) {
   set.seed(123)
   `%>%` <- dplyr::`%>%`
   gene_variance <- apply(data, 1, var)
   gene_mean <- apply(data, 1, mean)
-  pct_occurrence <- apply(data, 1, function(row) mean(row > min) * 100)
-
-
-  variance_df <- data.frame(gene = rownames(data), variance = gene_variance, avg = gene_mean, pct_occurrence = pct_occurrence)
-
-  variance_df <- variance_df %>%
-    dplyr::arrange(desc(variance))
-
-
+  pct_occurrence <- apply(data, 1, function(row) mean(row >
+                                                        min) * 100)
+  variance_df <- data.frame(gene = rownames(data), variance = gene_variance,
+                            avg = gene_mean, pct_occurrence = pct_occurrence)
+  variance_df <- variance_df %>% dplyr::arrange(desc(variance))
   return(variance_df)
-
-
 }
-
-
 
 
 
@@ -838,118 +830,80 @@ genes_variance_calculate <- function(data, min = 0.5) {
 #' updated_project <- get_cluster_stats(sc_project, type = "subtypes", only_pos = TRUE, min_pct = 0.1)
 #'
 #' @export
-get_cluster_stats <- function(sc_project, type = NaN,  only_pos = TRUE, min_pct = 0.05) {
+get_cluster_stats <- function (sc_project, type = NaN, only_pos = TRUE, min_pct = 0.1) {
 
   set.seed(123)
-
-
-  if (!type %in% c('subtypes', 'subclasses', 'cluster', 'primary')) {
-
+  if (!type %in% c("subtypes", "subclasses", "cluster", "primary")) {
     stop("Invalid `type` provided. The `type` parameter should be either 'subtypes' or 'subclasses' or 'cluster' or 'primary'")
-
   }
-
-
-  if (type == 'subtypes') {
-
-    slot = 'subtypes_markers'
-
+  if (type == "subtypes") {
+    slot = "subtypes_markers"
     names <- sc_project@names$subtypes
-
-  } else if (type == 'subclasses') {
-
-    slot = 'subclasses_markers'
-
+  } else if (type == "subclasses") {
+    slot = "subclasses_markers"
     names <- sc_project@names$subclass
-
-
-  } else if (type == 'cluster') {
-
-    slot = 'clusters_markers'
-
+  } else if (type == "cluster") {
+    slot = "clusters_markers"
     names <- sc_project@names$cluster
-
-
-  } else if (type == 'primary') {
-
-    slot = 'primary_markers'
-
+  } else if (type == "primary") {
+    slot = "primary_markers"
     names <- sc_project@names$primary
-
   }
-
-
   data <- sc_project@matrices$norm
-
   colnames(data) <- names
-
-  if (FALSE %in% unique(grepl('[^0-9]', colnames(data)))) {
-
-
-    cluster_group <-  sort(as.numeric(as.character(unique(colnames(data)))))
-
+  if (FALSE %in% unique(grepl("[^0-9]", colnames(data)))) {
+    cluster_group <- sort(as.numeric(as.character(unique(colnames(data)))))
   } else {
-
-    cluster_group <-  as.character(unique(colnames(data)))
-
+    cluster_group <- as.character(unique(colnames(data)))
   }
-
-
   results <- data.frame()
-
   for (c in cluster_group) {
-
-
-    cat(paste('\n\n Cluster ->  ', c, '- searching marker genes... \n\n' ))
-
-
-    tmp1 = data[,colnames(data) %in% c]
+    cat(paste("\n\n Cluster ->  ", c, "- searching marker genes... \n\n"))
+    tmp1 = data[, colnames(data) %in% c]
     tmp_results <- data.frame(genes = rownames(tmp1))
-    tmp2 = data[,!colnames(data) %in% c]
+    tmp2 = data[, !colnames(data) %in% c]
     tmp_sum <- tmp1
     tmp_sum[tmp_sum > 0] <- 1
     tmp_results$pct_occurrence <- rowSums(tmp_sum)/ncol(tmp_sum)
     rm(tmp_sum)
     t1 = rowMeans(tmp1)
     t2 = rowMeans(tmp2)
-    tmp_results$avg_logFC <- log2((t1 + (min(t1[t1 > 0])/2))  / (t2 + (min(t2[t2 > 0])/2)))
-    tmp_results <- tmp_results[tmp_results$pct_occurrence > min_pct, , drop = FALSE]
+    v1 <- apply(tmp1, 1, var, na.rm = TRUE)
+    v2 <- apply(tmp2, 1, var, na.rm = TRUE)
+    n1 <- ncol(tmp1)
+    n2 <- ncol(tmp2)
 
+    s_pooled <- sqrt(((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2))
+    tmp_results$esm <- (t1 - t2) / s_pooled
 
-
+    tmp_results$avg_logFC <- log2((t1 + (min(t1[t1 > 0])/2))/(t2 +
+                                                                (min(t2[t2 > 0])/2)))
+    tmp_results <- tmp_results[tmp_results$pct_occurrence >
+                                 min_pct, , drop = FALSE]
     if (only_pos == TRUE) {
-
-      tmp_results <- tmp_results[tmp_results$avg_logFC > 0,]
-      tmp_data <- data[match(tmp_results$genes, rownames(data)), ]
-
+      tmp_results <- tmp_results[tmp_results$avg_logFC >
+                                   0, ]
+      tmp_data <- data[match(tmp_results$genes, rownames(data)),
+      ]
       tmp_results$p_val <- apply(tmp_data, 1, function(gene_expression) {
-        wilcox.test(gene_expression[colnames(tmp_data) %in% c],
-                    gene_expression[!colnames(tmp_data) %in% c])$p.value})
-
+        wilcox.test(gene_expression[colnames(tmp_data) %in%
+                                      c], gene_expression[!colnames(tmp_data) %in%
+                                                            c])$p.value
+      })
     } else {
-
       tmp_results$p_val <- apply(data, 1, function(gene_expression) {
-        wilcox.test(gene_expression[colnames(data) %in% c],
-                    gene_expression[!colnames(data) %in% c])$p.value})
+        wilcox.test(gene_expression[colnames(data) %in%
+                                      c], gene_expression[!colnames(data) %in% c])$p.value
+      })
     }
-
-
     tmp_results$cluster <- c
     results <- rbind(results, tmp_results)
   }
 
-
-
-
   sc_project@metadata[[slot]] <- results
 
-
   return(sc_project)
-
-
 }
-
-
 
 
 
@@ -1224,7 +1178,13 @@ heterogeneity_select_specificity <- function(sc_project, type = NaN, heterogenei
 #'   max_genes = 200, min_occ = 10, min_exp = 0.2, rep_factor = 0.4)
 #'
 #' @export
-heterogeneity_select_variance <- function(sc_project, heterogeneity_factor = 80, max_genes = 1000, min_occ = 5, min_exp = 0.1, rep_factor = 0.5, mito_content = FALSE) {
+heterogeneity_select_variance <- function(sc_project,
+                                          heterogeneity_factor = 80,
+                                          max_genes = 1000,
+                                          min_occ = 5,
+                                          min_exp = 0.1,
+                                          rep_factor = 0.1,
+                                          mito_content = FALSE) {
 
   set.seed(123)
 
@@ -1292,7 +1252,7 @@ heterogeneity_select_variance <- function(sc_project, heterogeneity_factor = 80,
                              n = as.numeric(value_counts))
 
 
-  to_rm <- value_counts$valuename[value_counts$n <= length(unique(full_data$cluster))* rep_factor]
+  to_rm <- value_counts$valuename[value_counts$n <= ceiling(length(unique(full_data$cluster))* rep_factor)]
 
 
   full_2 = data.frame()
@@ -1312,40 +1272,42 @@ heterogeneity_select_variance <- function(sc_project, heterogeneity_factor = 80,
   full_2 = full_2 %>% dplyr::group_by(cluster) %>% dplyr::top_n(n = max_genes, wt = avg)
 
 
+  sparse_matrix_bin <- sparse_matrix[unique(full_2$gene),]
+  sparse_matrix_bin[sparse_matrix_bin<min_exp] <- 0
+  sparse_matrix_bin[sparse_matrix_bin>=min_exp] <- 1
 
-  heterogeneity_markers_df_2 = data.frame()
+  row_percent <- data.frame(
+    gene = rownames(sparse_matrix_bin),
+    percent = rowSums(sparse_matrix_bin) / ncol(sparse_matrix_bin) * 100
+  )
 
 
-  value_counts <- table(heterogeneity_markers_df$gene[heterogeneity_markers_df$pct_occurrence > 55])
-  value_counts <- data.frame(valuename = names(value_counts),
-                             n = as.numeric(value_counts))
+  to_rm <- row_percent$gene[row_percent$percent <= 30]
 
-  to_rm <- value_counts$valuename[value_counts$n > 1]
 
-  for (c in unique(heterogeneity_markers_df$cluster)) {
-    tmp <- heterogeneity_markers_df[heterogeneity_markers_df$cluster %in% c, , drop = FALSE]
+  full_3 = data.frame()
+
+
+  for (c in unique(full_2$cluster)) {
+    tmp <- full_2[full_2$cluster %in% c, , drop = FALSE]
     tmp <- tmp[!tmp$gene %in% to_rm, , drop = FALSE]
-    if (nrow(tmp) < 1) {
-      tmp <- heterogeneity_markers_df[heterogeneity_markers_df$cluster %in% c, , drop = FALSE]
+    if (nrow(tmp) < 10) {
+      tmp <- full_2[full_2$cluster %in% c, , drop = FALSE]
     }
 
-    heterogeneity_markers_df_2 <- rbind(heterogeneity_markers_df_2, tmp)
+    full_3 <- rbind(full_3, tmp)
 
   }
 
 
-  heterogeneity_markers_df_2 = heterogeneity_markers_df_2 %>% dplyr::group_by(cluster) %>% dplyr::top_n(n = max_genes, wt = pct_occurrence)
 
-
-  sc_project@metadata$heterogeneity_markers <- list('marker_df' = full_2, 'heterogeneity_markers_df' = heterogeneity_markers_df_2)
+  sc_project@metadata$heterogeneity_markers <- list('marker_df' = full_data, 'heterogeneity_markers_df' = full_3)
 
 
   return(sc_project)
 
 
 }
-
-
 
 
 
@@ -1372,7 +1334,7 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
   set.seed(123)
 
   sparse_matrix = sc_project@matrices$norm
-  markers = sc_project@metadata$heterogeneity_markers$marker_df
+  markers = sc_project@metadata$heterogeneity_markers$heterogeneity_markers_df
 
   old_warn <- options("warn")  # Save the current warning level
   options(warn = -1)
@@ -1866,54 +1828,39 @@ marker_heatmap <- function(sc_project,
 #' print(markers)
 #'
 #' @export
-get_names_markers <- function(sc_project, type = 'subtypes') {
-
+get_names_markers <- function (sc_project, type = "subtypes") {
 
   set.seed(123)
-
-  if (!type %in% c('subtypes', 'subclasses')) {
-
+  if (!type %in% c("subtypes", "subclasses")) {
     stop("Invalid `type` provided. The `type` parameter should be either 'subtypes' or 'subclasses' or 'cluster' or 'primary'")
-
   }
-
-
-  if (type == 'subtypes') {
-
-    slot = 'subtypes_markers'
-
+  if (type == "subtypes") {
     names <- sc_project@names$subtypes
-
-  } else if (type == 'subclasses') {
-
-    slot = 'subclasses_markers'
-
+    markers_list <- unique(gsub('.* - ', '', names))
+    markers_list <- unique(markers_list[toupper(markers_list) %in%
+                                          toupper(rownames(sc_project@matrices$norm))])
+  } else if  (type == "subclasses") {
+    slot = "subclasses_markers"
     names <- sc_project@names$subclass
-
-
-  } else if (type == 'cluster') {
-
-    slot = 'clusters_markers'
-
+    markers_list <- unlist(strsplit(unique(names), " "))
+    markers_list <- unique(markers_list[toupper(markers_list) %in%
+                                          toupper(rownames(sc_project@matrices$norm))])
+  } else if (type == "cluster") {
+    slot = "clusters_markers"
     names <- sc_project@names$cluster
-
-
-  } else if (type == 'primary') {
-
-    slot = 'primary_markers'
-
+    markers_list <- unlist(strsplit(unique(names), " "))
+    markers_list <- unique(markers_list[toupper(markers_list) %in%
+                                          toupper(rownames(sc_project@matrices$norm))])
+  } else if (type == "primary") {
+    slot = "primary_markers"
     names <- sc_project@names$primary
-
+    markers_list <- unlist(strsplit(unique(names), " "))
+    markers_list <- unique(markers_list[toupper(markers_list) %in%
+                                          toupper(rownames(sc_project@matrices$norm))])
   }
-
-
-  markers_list <- unlist(strsplit(unique(names), " "))
-  markers_list <- unique(markers_list[toupper(markers_list) %in% toupper(rownames(sc_project@matrices$norm))])
 
   return(markers_list)
-
 }
-
 
 
 #' Compute Averaged Expression Data
@@ -2436,99 +2383,61 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 #' )
 #'
 #' @export
-namign_genes_selection <- function (sc_project, type = 'primary', top_n = 25,
-                                    p_val = 0.05, select_stat = "p_val",
-                                    mito_content = FALSE, ribo_content = FALSE)
-{
-  set.seed(123)
+namign_genes_selection <- function (sc_project, type = "primary", top_n = 25, p_val = 0.05,
+                                    select_stat = "p_val", mito_content = FALSE, ribo_content = FALSE) {
 
-  markers <- sc_project@metadata$primary_markers
+  set.seed(123)
 
   if (!type %in% c("subtypes", "subclasses", "cluster", "primary")) {
     stop("Invalid `type` provided. The `type` parameter should be either 'subtypes' or 'subclasses' or 'cluster' or 'primary'")
   }
-
   if (type == "subtypes") {
     markers <- sc_project@metadata$subtypes_markers
-
   } else if (type == "subclasses") {
     markers <- sc_project@metadata$subclasses_markers
-
   } else if (type == "cluster") {
     markers <- sc_project@metadata$clusters_markers
-
   } else if (type == "primary") {
     markers <- sc_project@metadata$primary_markers
   }
-
-
   if (mito_content == FALSE) {
-
-    markers <- markers %>%
-      group_by(cluster) %>%
-      group_modify(~{
-        mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
-
-        cleaned <- .x[!mt_idx, , drop = FALSE]
-
-        if (nrow(cleaned) == 0) {
-          return(.x[mt_idx, , drop = FALSE])
-        } else {
-          return(cleaned)
-        }
-      }) %>%
-      ungroup()
-
-  }
-
-  if (ribo_content == FALSE) {
-    markers <- markers %>%
-      group_by(cluster) %>%
-      group_modify(~{
-
-        ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
-
-        cleaned <- .x[!ribo_idx, , drop = FALSE]
-
-        if (nrow(cleaned) == 0) {
-          return(.x[ribo_idx, , drop = FALSE])
-        } else {
-          return(cleaned)
-        }
-      }) %>%
-      ungroup()
-
-  }
-
-
-  marker_df <- markers[markers$p_val < p_val, ]
-
-  marker_df <- marker_df %>%
-    group_by(cluster) %>%
-    arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
-    slice_head(n = top_n)
-
-
-  dup_genes <- marker_df$genes[duplicated(marker_df$genes) | duplicated(marker_df$genes, fromLast = TRUE)]
-
-  marker_clean <- marker_df %>%
-    group_by(cluster) %>%
-    group_modify(~{
-      cleaned <- .x %>% filter(!genes %in% dup_genes)
-
-      if (nrow(cleaned) < 2) {
-        .x %>%
-          arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
-          slice_head(n = 2)
+    markers <- markers %>% group_by(cluster) %>% group_modify(~{
+      mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
+      cleaned <- .x[!mt_idx, , drop = FALSE]
+      if (nrow(cleaned) == 0) {
+        return(.x[mt_idx, , drop = FALSE])
       } else {
-        cleaned
+        return(cleaned)
       }
-    }) %>%
-    ungroup()
-
-
-
+    }) %>% ungroup()
+  }
+  if (ribo_content == FALSE) {
+    markers <- markers %>% group_by(cluster) %>% group_modify(~{
+      ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
+      cleaned <- .x[!ribo_idx, , drop = FALSE]
+      if (nrow(cleaned) == 0) {
+        return(.x[ribo_idx, , drop = FALSE])
+      } else {
+        return(cleaned)
+      }
+    }) %>% ungroup()
+  }
+  marker_df <- markers[markers$p_val < p_val, ]
+  marker_df <- marker_df %>% group_by(cluster) %>% arrange(desc(pct_occurrence), desc(esm),
+                                                           desc(avg_logFC)) %>% slice_head(n = top_n)
+  dup_genes <- marker_df$genes[duplicated(marker_df$genes) |
+                                 duplicated(marker_df$genes, fromLast = TRUE)]
+  marker_clean <- marker_df %>% group_by(cluster) %>% group_modify(~{
+    cleaned <- .x %>% filter(!genes %in% dup_genes)
+    if (nrow(cleaned) < 2) {
+      .x %>% arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
+        slice_head(n = 2)
+    } else {
+      cleaned
+    }
+  }) %>% ungroup()
   sc_project@metadata$naming_markers <- marker_clean
-
   return(sc_project)
 }
+
+
