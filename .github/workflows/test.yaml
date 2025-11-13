@@ -1,0 +1,38 @@
+name: Push test
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  R-CMD-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+
+    - name: Set up R 4.4.2
+      uses: r-lib/actions/setup-r@v2
+      with:
+        r-version: 4.4.2
+
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev libxml2-dev
+
+    - name: Install R packages
+      run: |
+        R -e 'install.packages(c("testthat", "Seurat"))'
+        R -e 'remotes::install_local("packages/CSSG.toolkit_0.1.2.tar.gz", dependencies=TRUE)'
+
+
+    - name: Run tests
+      run: |
+        R -e 'library(testthat); test_dir("CSSG.toolkit/tests")'

@@ -15,11 +15,16 @@ output:
 
 # Install required packages
 
-install.packages("Seurat")
-install.packages("remotes")
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
+}
 
-remotes::install_url(
-  "https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.2.tar.gz",
+if (!requireNamespace("Seurat", quietly = TRUE)) {
+  install.packages("Seurat")
+}
+
+remotes::install_local(
+  "../packages/CSSG.toolkit_0.1.2.tar.gz",
   dependencies = TRUE
 )
 
