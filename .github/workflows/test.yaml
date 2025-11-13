@@ -25,12 +25,14 @@ jobs:
     - name: Install system dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev libxml2-dev
+        sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev libxml2-dev r-cran-seurat
 
-    - name: Install and run tests
+    - name: Install R packages
       run: |
-        R -e '
-          install.packages(c("testthat", "Seurat", "remotes"));
-          remotes::install_local("packages/CSSG.toolkit_0.1.2.tar.gz", dependencies=TRUE);
-          library(testthat);
-          test_dir("CSSG.toolkit/tests")'
+        R -e 'install.packages(c("testthat", "remotes"))'
+        R -e 'remotes::install_local("packages/CSSG.toolkit_0.1.2.tar.gz", dependencies=TRUE)'
+
+
+    - name: Run tests
+      run: |
+        R -e 'library(testthat); test_dir("CSSG.toolkit/tests")'
