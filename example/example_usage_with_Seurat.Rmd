@@ -15,8 +15,13 @@ output:
 
 # Install required packages
 
-# install.packages("Seurat")  
-# install.packages("https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.0.tar.gz", repos = NULL, type = "source")
+install.packages("Seurat")
+install.packages("remotes")
+
+remotes::install_url(
+  "https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.2.tar.gz",
+  dependencies = TRUE
+)
 
 
 library(CSSG.toolkit)
@@ -111,7 +116,7 @@ UMI <- subset(UMI, subset = nFeature_RNA > thresholds$thresholds[1] & nFeature_R
 
 ###########################################################################################################################################################
 
-UMI <- FindVariableFeatures(UMI, selection.method = "vst", nfeatures = 5000, binning.method = 'equal_frequency')
+UMI <- FindVariableFeatures(UMI, selection.method = "vst", nfeatures = 2500, binning.method = 'equal_frequency')
 
 # Identify the 10 most highly variable genes
 
@@ -155,7 +160,7 @@ dim <- dim_reuction_pcs(dims)
 
 Elbow <- Elbow + geom_vline(xintercept = dim, color = 'red') +   geom_text(aes(x = dim + 3, y = round(max(Elbow$data$stdev)/2,0), label = paste("Dim =", dim)), color = 'red', vjust = -1)
 
-
+Elbow
 
 ```
 
@@ -216,41 +221,51 @@ sc_project <- create_project_from_seurat(UMI)
 ## Cluster naming
 
 
-#### CSSG preparing
+#### Cluster markers and CSSG preparing
 
 
 ```{r  include=FALSE}
 
-
+# load markers for 
 markers_class = read.xlsx('../markers/non_canonical.xlsx', sheet = 1)
 markers_subclass = read.xlsx('../markers/non_canonical.xlsx', sheet = 2)
 
 
-
-# Select markers selection method (see documentation)
-
-
-
-###################################################################################
-
-# cluster markers selection - wilcox
-
-# sc_project <- get_cluster_stats(sc_project = sc_project, type = 'primary', only_pos = TRUE)
-
-# 
-# 
-# sc_project <- heterogeneity_select_specificity(sc_project = sc_project, type = 'primary', heterogeneity_factor = 80, p_val =  0.05, max_genes =  50, select_stat = 'p_val',  min_occ = 5, mito_content = FALSE)
-# 
+# get markers for subclass naming
+sc_project <- get_cluster_stats(sc_project = sc_project, type = 'primary', only_pos = TRUE)
 
 
 
+# select markers for subclass naming
+sc_project <- namign_genes_selection(sc_project, type = 'primary', top_n = 25,
+                              p_val = 0.05, select_stat = "p_val",
+                              mito_content = FALSE, ribo_content = FALSE)
 
-###################################################################################
 
-# cluster markers selection - variance
 
-sc_project <- heterogeneity_select_variance(sc_project = sc_project, heterogeneity_factor = 80, max_genes = 50, min_occ = 5, min_exp = 0.3, rep_factor = 0.5, mito_content = FALSE)
+# there are two options for subtypes naming with CSS based on variance or cluster-specific markers
 
+# select markers for CSSG algorithm based on inside variance
+  
+sc_project <- heterogeneity_select_variance(sc_project = sc_project, 
+                                                          heterogeneity_factor = 0.80, 
+                                                          max_genes = 1000, 
+                                                          min_occ = 5, 
+                                                          min_exp = 0.1, 
+                                                          rep_factor = 0.2, 
+                                                          mito_content = FALSE)
+# or
+
+# select markers for CSSG algorithm based on cluster-specific markers calcualted with get_cluster_stats()
+
+sc_project <- heterogeneity_select_specificity(sc_project = sc_project, 
+                                                             type = 'primary', 
+                                                             heterogeneity_factor = 0.80, 
+                                                             p_val =  0.05, 
+                                                             max_genes =  1000, 
+                                                             select_stat = 'p_val',  
+                                                             min_occ = 5, 
+                                                             mito_content = FALSE)
 
 
 
@@ -266,11 +281,7 @@ sc_project <- heterogeneity_select_variance(sc_project = sc_project, heterogenei
 ```{r  include=FALSE}
 
 
-
-
-sc_project <- subclass_naming(sc_project = sc_project, class_markers = markers_class, subclass_markers = markers_subclass, species = 'Homo sapiens', chunk_size = 5000)
-
-
+sc_project <- subclass_naming(sc_project = sc_project, class_markers = markers_class, subclass_markers <- markers_subclass, species = 'Homo sapiens', chunk_size = 5000)
 
 
 ```
@@ -302,7 +313,7 @@ threshold
 ```{r  include=FALSE}
 
 
-# markers selection
+# markers combinations selection with CSSG
 sc_project <- CSSG_markers(sc_project = sc_project, max_combine = 1000, loss_val = 0.05)
 
 
@@ -424,7 +435,7 @@ library(dplyr)
 
 markers5 <- markers %>%
   group_by(cluster) %>%
-  arrange(cluster,  p_val, desc(avg_logFC), desc(perc)) %>%  
+  arrange(cluster, desc(esm), p_val, desc(avg_logFC), desc(pct_occurrence)) %>%  
   slice_head(n = 5)
 
 write.csv(markers5, 'top5.csv', quote = FALSE)
@@ -442,10 +453,18 @@ write.csv(markers5, 'top5.csv', quote = FALSE)
 markers <- get_names_markers(sub_sc_project, type = 'subtypes') 
 
 
-plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]')
+plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]', scale = F)
 
 
 plot
 ```
 
+```{r  include=FALSE}
 
+
+
+plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Scaled(Genes [log(CPM +1)])', scale  = T)
+
+
+plot
+```
