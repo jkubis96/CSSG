@@ -21,7 +21,7 @@ This function normalizes the count matrix of a single-cell RNA-seq project by ap
 The log transformation is calculated using the formula: log2((count / gene counts) * factor + 1).
 }
 \examples{
-normalized_project <- normalize_data(sc_project, type = 'counts', factor = 1000000)
-normalized_project <- normalize_data(sc_project, type = 'genes', factor = 10000)
+normalized_project <- normalize_data(sc_project, type = "counts", factor = 1000000)
+normalized_project <- normalize_data(sc_project, type = "genes", factor = 10000)
 
 }

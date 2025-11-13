@@ -21,8 +21,8 @@ heterogeneity_select_specificity(
 \item{type}{A character string specifying the cluster type. Must be one of:
 'subtypes', 'subclasses', 'cluster', or 'primary'.}
 
-\item{heterogeneity_factor}{A numeric value defining the maximum percentage of cells in a
-cluster expressing a gene for it to be considered heterogeneous. Default is 80.}
+\item{heterogeneity_factor}{A numeric value (range 0-1) defining the maximum percentage of cells in a
+cluster expressing a gene for it to be considered heterogeneous. Default is 0.8.}
 
 \item{p_val}{A numeric value specifying the p-value threshold for gene selection.
 Default is 0.05.}
@@ -60,7 +60,9 @@ The function performs the following steps:
   - Stores the final marker gene lists in `sc_project@metadata$heterogeneity_markers`.
 }
 \examples{
-updated_project <- heterogeneity_select_specificity(sc_project, type = "subtypes",
-  heterogeneity_factor = 75, p_val = 0.01, max_genes = 500, select_stat = "avg_logFC")
+updated_project <- heterogeneity_select_specificity(sc_project,
+  type = "subtypes",
+  heterogeneity_factor = 0.75, p_val = 0.01, max_genes = 500, select_stat = "avg_logFC"
+)
 
 }

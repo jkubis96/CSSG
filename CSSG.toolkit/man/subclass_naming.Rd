@@ -40,6 +40,6 @@ The `aggregation_chr` and `aggregation_num` functions are used to handle differe
 }
 \examples{
 # Assuming you have a valid scRNAproject object (`sc_project`), class markers, and subclass markers
-updated_project <- subclass_naming(sc_project, class_markers = NULL, subclass_markers = NULL, species = 'Homo sapiens', chunk_size = 5000)
+updated_project <- subclass_naming(sc_project, class_markers = NULL, subclass_markers = NULL, species = "Homo sapiens", chunk_size = 5000)
 
 }

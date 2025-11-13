@@ -20,7 +20,7 @@ A sparse matrix of the specified expression data, with appropriate cell names as
 This function retrieves expression data (either 'norm' or 'count') from a specified subtype or subclass grouping within a given `sc_project` object.
 }
 \examples{
-norm_data <- get_data(sc_project, type = 'subtypes', data = 'norm')
-count_data <- get_data(sc_project, type = 'subclasses', data = 'count')
+norm_data <- get_data(sc_project, type = "subtypes", data = "norm")
+count_data <- get_data(sc_project, type = "subclasses", data = "count")
 
 }

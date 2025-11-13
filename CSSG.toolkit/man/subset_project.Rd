@@ -21,6 +21,6 @@ This function subsets a single-cell RNA-seq project object by selecting specific
 Only the cells that belong to the specified `select_list` are retained in the matrices and names within the `sc_project`.
 }
 \examples{
-subsetted_project <- subset_project(sc_project, type = 'subtypes', select_list = c("Subtype1", "Subtype3"))
-subsetted_project <- subset_project(sc_project, type = 'cluster', select_list = c("Cluster4", "Cluster7"))
+subsetted_project <- subset_project(sc_project, type = "subtypes", select_list = c("Subtype1", "Subtype3"))
+subsetted_project <- subset_project(sc_project, type = "cluster", select_list = c("Cluster4", "Cluster7"))
 }

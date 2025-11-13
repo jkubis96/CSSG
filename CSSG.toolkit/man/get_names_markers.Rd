@@ -18,7 +18,7 @@ A character vector of unique marker gene names that are present in the normalize
 This function extracts marker gene names from a given `sc_project` object based on the specified cell subclass and subtype name.
 }
 \examples{
-markers <- get_names_markers(sc_project, type = 'subtypes')
+markers <- get_names_markers(sc_project, type = "subtypes")
 print(markers)
 
 }

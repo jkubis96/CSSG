@@ -6,7 +6,7 @@
 \usage{
 heterogeneity_select_variance(
   sc_project,
-  heterogeneity_factor = 80,
+  heterogeneity_factor = 0.8,
   max_genes = 1000,
   min_occ = 5,
   min_exp = 0.1,
@@ -17,8 +17,8 @@ heterogeneity_select_variance(
 \arguments{
 \item{sc_project}{A single-cell project object containing normalized gene expression data.}
 
-\item{heterogeneity_factor}{A numeric value defining the maximum percentage of cells in a
-cluster expressing a gene for it to be considered heterogeneous. Default is 80.}
+\item{heterogeneity_factor}{A numeric value (range 0-1) defining the maximum percentage of cells in a
+cluster expressing a gene for it to be considered heterogeneous. Default is 0.8.}
 
 \item{max_genes}{A numeric value defining the maximum number of genes to retain per cluster.
 Default is 1000.}
@@ -54,7 +54,9 @@ The function performs the following steps:
   - Stores the final gene list in `sc_project@metadata$heterogeneity_markers`.
 }
 \examples{
-updated_project <- heterogeneity_select_variance(sc_project, heterogeneity_factor = 50,
-  max_genes = 200, min_occ = 10, min_exp = 0.2, rep_factor = 0.4)
+updated_project <- heterogeneity_select_variance(sc_project,
+  heterogeneity_factor = 0.5,
+  max_genes = 200, min_occ = 10, min_exp = 0.2, rep_factor = 0.4
+)
 
 }

@@ -22,6 +22,6 @@ A matrix or data frame with aggregated expression values.
 This function retrieves and aggregates expression data from an `sc_project` object based on the specified cell type category.
 }
 \examples{
-avg_data <- get_avg_data(sc_project, type = 'subtypes', data = 'norm')
+avg_data <- get_avg_data(sc_project, type = "subtypes", data = "norm")
 
 }
