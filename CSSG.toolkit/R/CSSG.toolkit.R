@@ -15,7 +15,6 @@ cluster_naming <- function(matrix_a, markers) {
   set.seed(123)
 
 
-
   matrix_a <- as.data.frame(matrix_a)
   colname <- colnames(matrix_a)
   rownames(matrix_a) <- make.unique(toupper(rownames(matrix_a)), sep = "")
@@ -1903,22 +1902,22 @@ setClass(
 #' sc_project <- create_project_from_seurat(seurat_project)
 #'
 #' @export
-create_project_from_seurat <- function(seurat_project) {
-  tmp <- UMI@assays$RNA$data
-  colnames(tmp) <- UMI@active.ident
+create_project_from_seurat <- function (seurat_project) {
 
+  tmp <- try(UMI@assays$RNA$data, silent = TRUE)
+  if (inherits(tmp, "try-error")) {
+    tmp <- try(UMI@assays$RNA@data, silent = TRUE)
+  }
+
+  colnames(tmp) <- UMI@active.ident
   matrices <- list()
   matrices[["norm"]] <- tmp
-
   names_list <- list()
   names_list[["primary"]] <- colnames(matrices[["norm"]])
-
-  sc_class <- new("scRNAproject", metadata = list(), matrices = matrices, names = names_list)
-
-
+  sc_class <- new("scRNAproject", metadata = list(), matrices = matrices,
+                  names = names_list)
   return(sc_class)
 }
-
 
 
 #' Create a scRNA Project from Sparse Matrix Files
