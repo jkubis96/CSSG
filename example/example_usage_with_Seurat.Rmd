@@ -232,8 +232,8 @@ sc_project <- create_project_from_seurat(UMI)
 ```{r  include=FALSE}
 
 # load markers for 
-markers_class = read.xlsx('../markers/non_canonical.xlsx', sheet = 1)
-markers_subclass = read.xlsx('../markers/non_canonical.xlsx', sheet = 2)
+markers_class = read.xlsx('../markers/markers_developing_brain.xlsx', sheet = 1)
+markers_subclass = read.xlsx('../markers/markers_developing_brain.xlsx', sheet = 2, colNames = F)
 
 
 # get markers for subclass naming
@@ -286,7 +286,7 @@ sc_project <- heterogeneity_select_specificity(sc_project = sc_project,
 ```{r  include=FALSE}
 
 
-sc_project <- subclass_naming(sc_project = sc_project, class_markers = markers_class, subclass_markers <- markers_subclass, species = 'Homo sapiens', chunk_size = 5000)
+sc_project <- subclass_naming(sc_project = sc_project, class_markers = markers_class, subclass_markers = markers_subclass, species = 'Homo sapiens', chunk_size = 5000)
 
 
 ```

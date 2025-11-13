@@ -34,8 +34,8 @@ cluster_naming <- function(matrix_a, markers) {
     index <- 0
     for (i in colnames(matrix_a)) {
       index <- index + 1
-      rename_df <- as.data.frame(matrix_a[toupper(rownames(matrix_a)) %in% toupper(list.markers), index, drop = F])
-      rename_df <- as.data.frame(rename_df[order(rename_df, decreasing = T), , drop = F])
+      rename_df <- as.data.frame(matrix_a[toupper(rownames(matrix_a)) %in% toupper(list.markers), index, drop = FALSE])
+      rename_df <- rename_df[order(rename_df[[1]], decreasing = TRUE), , drop = FALSE]
       sum <- sum(rename_df)
       if (sum > 0) {
         colnames(matrix_a)[index] <- rownames(rename_df)[1]
@@ -123,10 +123,9 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
       x
     }
 
-
     cell_names.1 <- c()
     for (i in 1:length(colnames(average_expression))) {
-      rename_df <- average_expression[rownames(average_expression) %in% markers_subclass, ]
+      rename_df <- average_expression[toupper(rownames(average_expression)) %in% toupper(markers_subclass), ]
       rename_df <- as.data.frame(rename_df[order(rename_df[, i], decreasing = T), , drop = F])
       if (sum(rename_df[, i]) > 0) {
         cell_names.1[i] <- toupper(rownames(rename_df[1, ]))
@@ -134,7 +133,6 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
         cell_names.1[i] <- ""
       }
     }
-
 
 
     cell_names.2 <- c()
@@ -147,8 +145,6 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
         cell_names.2[col] <- firstup(tolower(tmp_names$gene[2]))
       }
     }
-
-    sub_names <- paste(cell_names.1, cell_names.2)
   } else if (length(markers_subclass) == 0) {
     firstup <- function(x) {
       substr(x, 1, 1) <- toupper(substr(x, 1, 1))
@@ -164,19 +160,18 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
       cell_names.1[col] <- toupper(tmp_names$gene[1])
       cell_names.2[col] <- firstup(tolower(tmp_names$gene[2]))
     }
-
-
-
-    if (toupper(species) == "HOMO SAPIENS") {
-      cell_names.1 <- toupper(cell_names.1)
-      cell_names.2 <- toupper(cell_names.2)
-    } else {
-      cell_names.1 <- firstup(tolower(cell_names.1))
-      cell_names.2 <- firstup(tolower(cell_names.2))
-    }
-
-    sub_names <- paste(cell_names.1, cell_names.2)
   }
+
+
+  if (toupper(species) == "HOMO SAPIENS") {
+    cell_names.1 <- toupper(cell_names.1)
+    cell_names.2 <- toupper(cell_names.2)
+  } else {
+    cell_names.1 <- firstup(tolower(cell_names.1))
+    cell_names.2 <- firstup(tolower(cell_names.2))
+  }
+
+  sub_names <- paste(cell_names.1, cell_names.2)
 
 
   return(sub_names)
@@ -1902,8 +1897,7 @@ setClass(
 #' sc_project <- create_project_from_seurat(seurat_project)
 #'
 #' @export
-create_project_from_seurat <- function (seurat_project) {
-
+create_project_from_seurat <- function(seurat_project) {
   tmp <- try(UMI@assays$RNA$data, silent = TRUE)
   if (inherits(tmp, "try-error")) {
     tmp <- try(UMI@assays$RNA@data, silent = TRUE)
@@ -1914,8 +1908,10 @@ create_project_from_seurat <- function (seurat_project) {
   matrices[["norm"]] <- tmp
   names_list <- list()
   names_list[["primary"]] <- colnames(matrices[["norm"]])
-  sc_class <- new("scRNAproject", metadata = list(), matrices = matrices,
-                  names = names_list)
+  sc_class <- new("scRNAproject",
+    metadata = list(), matrices = matrices,
+    names = names_list
+  )
   return(sc_class)
 }
 
