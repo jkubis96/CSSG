@@ -1,5 +1,3 @@
-install.packages('Seurat')
-
 library(Seurat)
 library(CSSG.toolkit)
 library(testthat)

@@ -16,22 +16,36 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-
     - name: Set up R 4.4.2
       uses: r-lib/actions/setup-r@v2
       with:
         r-version: 4.4.2
 
-    - name: Install system dependencies
+    - name: Install system dependencies for Seurat
       run: |
         sudo apt-get update
-        sudo apt-get install -y libsqlite3-dev libcurl4-openssl-dev libssl-dev libxml2-dev
+        sudo apt-get install -y \
+          libhdf5-dev \
+          libfftw3-dev \
+          libpng-dev \
+          libtiff-dev \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libharfbuzz-dev \
+          libfribidi-dev \
+          libfreetype6-dev \
+          libglpk-dev
 
-    - name: Install R packages
+    - name: Install R dependencies
       run: |
         R -e 'install.packages(c("testthat", "remotes"))'
-        R -e 'remotes::install_local("packages/CSSG.toolkit_0.1.2.tar.gz", dependencies=TRUE)'
+        R -e 'install.packages("Seurat", repos="https://cloud.r-project.org")'
+        R -e 'remotes::install_local("packages/CSSG.toolkit_0.1.2.tar.gz", dependencies = TRUE)'
 
+    - name: Verify Seurat installation
+      run: |
+        R -e 'print(installed.packages()[,"Package"])'
 
     - name: Run tests
       run: |
