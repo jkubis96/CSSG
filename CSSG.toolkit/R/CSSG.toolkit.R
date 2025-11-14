@@ -1987,9 +1987,9 @@ dim_reuction_pcs <- function(dim_stats) {
   dim <- 1
   score <- c()
   element <- 0
-  for (i in dims$`Elbow$data$stdev`) {
+  for (i in dims[, 1]) {
     element <- element + 1
-    if (i - i * 0.01 > dims$`Elbow$data$stdev`[element + 1] & element < 50 | i - i * 0.02 > dims$`Elbow$data$stdev`[element + 2] & element < 49 | i - i * 0.02 > dims$`Elbow$data$stdev`[element + 3] & element < 48 | i - i * 0.02 > dims$`Elbow$data$stdev`[element + 4] & element < 47) {
+    if (i - i * 0.01 > dims[, 1][element + 1] & element < 50 | i - i * 0.02 > dims[, 1][element + 2] & element < 49 | i - i * 0.02 > dims[, 1][element + 3] & element < 48 | i - i * 0.02 > dims[, 1][element + 4] & element < 47) {
       dim <- dim + 1
     } else {
       break

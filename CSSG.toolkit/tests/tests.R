@@ -38,9 +38,12 @@ UMI <- ScaleData(UMI, features = rownames(UMI))
 
 UMI <- RunPCA(UMI, features = VariableFeatures(object = UMI))
 
+
+
 Elbow <- ElbowPlot(UMI, ndims = 50)
 
-dims <- as.data.frame(Elbow$data$stdev)
+
+dims <- data.frame(stdev = UMI[["pca"]]@stdev[1:50])
 
 
 dim <- dim_reuction_pcs(dims)
