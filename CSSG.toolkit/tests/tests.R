@@ -54,7 +54,7 @@ test_that("full CSSG pipeline runs", {
 
 
   # ====================
-  # 4. PCA + DIM REDUCTION
+  # 4. PCA + DIM REDUCTION (stabilna wersja)
   # ====================
   UMI <- FindVariableFeatures(
     UMI,
@@ -63,17 +63,22 @@ test_that("full CSSG pipeline runs", {
     binning.method = "equal_frequency"
   )
 
-  UMI <- ScaleData(UMI, features = rownames(UMI))
+  UMI <- ScaleData(UMI, features = VariableFeatures(UMI), verbose = FALSE)
 
-  UMI <- RunPCA(UMI, features = VariableFeatures(object = UMI))
+  UMI <- RunPCA(UMI, features = VariableFeatures(UMI), verbose = FALSE)
 
-  Elbow <- ElbowPlot(UMI, ndims = 50)
+  if (!("pca" %in% names(UMI@reductions))) {
+    stop("RunPCA not working")
+  }
 
-  # Seurat 5: stdev only in pca object
-  dims <- data.frame(stdev = UMI[["pca"]]@stdev[1:50])
-  colnames(dims)[1] <- "Elbow$data$stdev"
+  if (length(UMI[["pca"]]@stdev) == 0) {
+    stop("Lack of stdev in PCA")
+  }
+
+  dims <- data.frame(stdev = UMI[["pca"]]@stdev[1:min(50, length(UMI[["pca"]]@stdev))])
 
   dim <- dim_reuction_pcs(dims)
+
   expect_true(is.numeric(dim))
 
 
