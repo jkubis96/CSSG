@@ -4,7 +4,7 @@
 \alias{dim_reuction_pcs}
 \title{Determine the Optimal Number of Principal Components (PCs) for Dimensionality Reduction}
 \usage{
-dim_reuction_pcs(dim_stats)
+dim_reuction_pcs(dims)
 }
 \arguments{
 \item{dim_stats}{A list or data frame containing the standard deviation (or eigenvalue) for each principal component. Typically, this will be from the PCA analysis output, with the relevant data stored in `dims$Elbow$data$stdev`.}

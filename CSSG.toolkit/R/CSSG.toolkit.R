@@ -1981,7 +1981,7 @@ create_project <- function(sparse_matrix_path, sparse_name, rows_name, cols_name
 #' optimal_pcs <- dim_reuction_pcs(dims$Elbow$data$stdev)
 #'
 #' @export
-dim_reuction_pcs <- function(dim_stats) {
+dim_reuction_pcs <- function(dims) {
   set.seed(123)
 
   dim <- 1

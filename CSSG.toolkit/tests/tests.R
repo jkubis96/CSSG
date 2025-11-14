@@ -42,10 +42,8 @@ UMI <- RunPCA(UMI, features = VariableFeatures(object = UMI))
 
 Elbow <- ElbowPlot(UMI, ndims = 50)
 
-print(data.frame(stdev = UMI[["pca"]]@stdev[1:50]))
 
-
-dim <- dim_reuction_pcs(data.frame(stdev = UMI[["pca"]]@stdev[1:50]))
+dim <- dim_reuction_pcs(dims = data.frame(stdev = UMI[["pca"]]@stdev[1:50]))
 
 test_that("dim_selection", {
   expect_true(is.numeric(dim))
