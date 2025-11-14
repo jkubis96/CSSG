@@ -74,25 +74,37 @@ library(CSSG.toolkit)
 
 git pull https://github.com/jkubis96/CSSG.git
 
-cd benchmark
+cd example
 
-run benchmark.Rmd using RStudio or other IDE
+run example_usage_with_Seurat.Rmd using RStudio or other IDE
 ```
 
 <br />
 
 
-### R:
+***Example run -> example_usage_with_Seurat.rmd***
+* [example_usage_with_Seurat.Rmd](example/example_usage_with_Seurat.Rmd)
 
 
-##### Download repo and example data
+<br />
 
+#### R code and results:
 
 ```
+# Install required packages
 
-# install.packages("Seurat")  
-# install.packages("https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.0.tar.gz", repos = NULL, type = "source")
+if (!requireNamespace("remotes", quietly = TRUE)) {
+  install.packages("remotes")
+}
 
+if (!requireNamespace("Seurat", quietly = TRUE)) {
+  install.packages("Seurat")
+}
+
+remotes::install_local(
+  "../packages/CSSG.toolkit_0.1.2.tar.gz",
+  dependencies = TRUE
+)
 
 library(CSSG.toolkit)
 library(Seurat)
@@ -244,7 +256,6 @@ UMI <- RunPCA(UMI, features = VariableFeatures(object = UMI))
 Elbow <- ElbowPlot(UMI, ndims = 50)
 
 dims <- as.data.frame(Elbow$data$stdev)
-
 ```
 
 <br />
@@ -326,6 +337,26 @@ umap_plot
 sc_project <- create_project_from_seurat(UMI)
 ```
 
+
+<br />
+
+##### Selecting cluster specyfic markers for subclasses naming (CSSG.toolkit)
+
+
+
+```
+# get markers for subclass naming
+sc_project <- get_cluster_stats(sc_project = sc_project, type = 'primary', only_pos = TRUE)
+
+
+# select markers for subclass naming
+sc_project <- namign_genes_selection(sc_project, type = 'primary', top_n = 25,
+                              p_val = 0.05, select_stat = "p_val",
+                              mito_content = FALSE, ribo_content = FALSE)
+```
+
+<br />
+
 <br />
 
 ##### Selecting heterogeneity markers for CSSG (CSSG.toolkit)
@@ -334,13 +365,16 @@ sc_project <- create_project_from_seurat(UMI)
 * ###### Selecting heterogeneity based on Mann-Whitney statistic [compare between clusters] (CSSG.toolkit)
 
 ```
-# cluster markers selection 
+# select markers for CSSG algorithm based on cluster-specific markers calcualted with get_cluster_stats()
 
-sc_project <- get_cluster_stats(sc_project = sc_project, type = 'primary', only_pos = TRUE)
-
-# heterogeneity markers selection
-
-sc_project <- heterogeneity_select_specificity(sc_project = sc_project, type = 'primary', heterogeneity_factor = 80, p_val =  0.05, max_genes =  50, select_stat = 'p_val',  min_occ = 5, mito_content = FALSE)
+sc_project <- heterogeneity_select_specificity(sc_project = sc_project, 
+                                                             type = 'primary', 
+                                                             heterogeneity_factor = 0.80, 
+                                                             p_val =  0.05, 
+                                                             max_genes =  1000, 
+                                                             select_stat = 'p_val',  
+                                                             min_occ = 5, 
+                                                             mito_content = FALSE)
 ```
 
 <br />
@@ -348,9 +382,15 @@ sc_project <- heterogeneity_select_specificity(sc_project = sc_project, type = '
 * ###### Selecting heterogeneity based on variance [variance inside cluster] (CSSG.toolkit)
 
 ```
-# heterogeneity markers selection - variance
+# select markers for CSSG algorithm based on inside variance
 
-sc_project <- heterogeneity_select_variance(sc_project = sc_project, heterogeneity_factor = 80, max_genes = 50, min_occ = 5, min_exp = 0.3, rep_factor = 0.5, mito_content = FALSE)
+sc_project <- heterogeneity_select_variance(sc_project = sc_project, 
+                                                          heterogeneity_factor = 0.80, 
+                                                          max_genes = 1000, 
+                                                          min_occ = 5, 
+                                                          min_exp = 0.1, 
+                                                          rep_factor = 0.2, 
+                                                          mito_content = FALSE)
 ```
 
 <br />
@@ -378,11 +418,13 @@ sc_project <- CSSG_markers(sc_project = sc_project, max_combine = 1000, loss_val
 ##### Loading subclass and subtypes markers
 
 ```
-# Load an empty spreadsheet for the example analysis
-# A spreadsheet with non-canonical naming will return NULL for both variables
+# load predefinied markers for subclass naming
+markers_class = read.xlsx('../markers/markers_developing_brain.xlsx', sheet = 1)
+markers_subclass = read.xlsx('../markers/markers_developing_brain.xlsx', sheet = 2, colNames = F)
 
-markers_class = read.xlsx('../markers/non_canonical.xlsx', sheet = 1)
-markers_subclass = read.xlsx('../markers/non_canonical.xlsx', sheet = 2)
+# or
+# load an empty spreadsheet for the example analysis
+# a spreadsheet with non-canonical naming will return NULL for both variables
 ```
 
 <br />
@@ -600,7 +642,11 @@ Example data:
 ```
 markers <- get_names_markers(sub_sc_project, type = 'subtypes') 
 
-plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]')
+# normalized data (normalized expression)
+plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Genes [log(CPM +1)]', scale = F)
+
+# scaled normalized data (scaled normalized expression with values 0-1)
+plot <- marker_heatmap(sub_sc_project, type = 'subtypes', markers = markers, angle_col = 270, fontsize_row = 7, fontsize_col = 7, font_labels = 8, clustering_method = 'complete', x_axis = 'Cells', y_axis = 'Scaled(Genes [log(CPM +1)])', scale  = T)
 
 plot
 ```
