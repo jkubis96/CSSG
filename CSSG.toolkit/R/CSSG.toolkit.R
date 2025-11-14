@@ -1898,12 +1898,12 @@ setClass(
 #'
 #' @export
 create_project_from_seurat <- function(seurat_project) {
-  tmp <- try(UMI@assays$RNA$data, silent = TRUE)
+  tmp <- try(seurat_project@assays$RNA$data, silent = TRUE)
   if (inherits(tmp, "try-error")) {
-    tmp <- try(UMI@assays$RNA@data, silent = TRUE)
+    tmp <- try(seurat_project@assays$RNA@data, silent = TRUE)
   }
 
-  colnames(tmp) <- UMI@active.ident
+  colnames(tmp) <- seurat_project@active.ident
   matrices <- list()
   matrices[["norm"]] <- tmp
   names_list <- list()
