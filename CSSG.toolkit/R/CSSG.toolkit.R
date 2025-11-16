@@ -10,17 +10,55 @@ firstup <- function(x) {
 }
 
 remove_makeunique_suffix <- function(x) {
-  sub("\\.\\d+$", "", x)
+  x <- sub("\\.\\d+$", "", x)
+  if (all(toupper(substr(x, 1, 1)) == "X")) {
+    x <- substr(x, 2, nchar(x))
+  }
+
+  return(x)
 }
 
+
+#' Reduce parts of gene names added by GTF-tool
+#'
+#' This function modifies a vector of gene names by removing parts
+#' added by GTF-tool (https://github.com/jkubis96/GTF-tool),
+#' making it suitable for bulk analysis without distinguishing location
+#' or transcript version.
+#'
+#' @param names A vector of gene names
+#'
+#' @return A vector of reduced gene names
+#'
+#' @examples
+#' reduced_names <- reduce_extended_gtf(names)
+#'
+#' @export
 reduce_extended_gtf <- function(names) {
   names_vec <- gsub("\\.var.*", "", as.vector(names))
   names_vec <- gsub("\\.chr.*", "", names_vec)
   names_vec <- gsub("\\.str.*", "", names_vec)
+
   return(names_vec)
 }
 
 
+#' Reduce parts of gene names added by GTF-tool and sum expression values
+#'
+#' This function modifies row names (genes) by removing parts
+#' added by the GTF-tool (https://github.com/jkubis96/GTF-tool),
+#' and sums expression values for genes with the same name after reduction.
+#' This makes the data suitable for bulk analysis without distinguishing
+#' gene location or transcript version.
+#'
+#' @param data A data.frame, matrix, or sparse matrix of expression data
+#'
+#' @return A data.frame with adjusted expression values
+#'
+#' @examples
+#' reduced_data <- scale_reduced_names(data, chunk_size = 5000)
+#'
+#' @export
 scale_reduced_names <- function(data, chunk_size = 5000) {
   back_col <- colnames(data)
 
@@ -304,7 +342,12 @@ subtypes_naming <- function(sc_project, markers_class = NULL, markers_subclass =
     sc_project@names$subtypes <- names_to_return
 
 
-    sc_project <- name_repairing(sc_project = sc_project, markers_class = markers_class, markers_subclass = markers_subclass, species = species, chunk_size = 5000)
+    sc_project <- name_repairing(
+      sc_project = sc_project,
+      markers_class = markers_class,
+      markers_subclass = markers_subclass,
+      species = species, chunk_size = 5000
+    )
 
 
     return(sc_project)
@@ -421,6 +464,9 @@ cell_stat_graph <- function(data, include_ns = TRUE) {
 
 name_repairing <- function(sc_project, markers_class, markers_subclass, species, chunk_size = 5000) {
   sparse_matrix <- sc_project@matrices$norm
+
+  sparse_matrix <- scale_reduced_names(sparse_matrix)
+
   colnames(sparse_matrix) <- sc_project@names$subtypes
 
   cluster_heterogeneity_markers <- sc_project@metadata$naming_markers
@@ -434,7 +480,6 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
   #############################################################################
   # Class & Subclass naming
 
-  sparse_matrix <- scale_reduced_names(sparse_matrix)
 
   if (!FALSE %in% unique(grepl("[^0-9]", colnames(sparse_matrix)))) {
     agg_subclasses <- aggregation_chr(sparse_matrix, chunk_size = chunk_size)
