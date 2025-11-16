@@ -9,6 +9,89 @@ firstup <- function(x) {
   return(x)
 }
 
+remove_makeunique_suffix <- function(x) {
+  sub("\\.\\d+$", "", x)
+}
+
+reduce_extended_gtf <- function(names) {
+  names_vec <- gsub("\\.var.*", "", as.vector(names))
+  names_vec <- gsub("\\.chr.*", "", names_vec)
+  names_vec <- gsub("\\.str.*", "", names_vec)
+  return(names_vec)
+}
+
+
+scale_reduced_names <- function(data, chunk_size = 5000) {
+  back_col <- colnames(data)
+
+  data <- as.data.frame(data)
+
+  rows <- reduce_extended_gtf(rownames(data))
+
+  data <- t(data)
+
+  colnames(data) <- rows
+
+  subset_num <- round(length(colnames(data)) / chunk_size)
+  cells_num <- round(length(colnames(data)) / subset_num)
+
+  if (round(length(colnames(data))) > (chunk_size * 1.5)) {
+    for (batch in 1:subset_num) {
+      if (batch == 1 & round(length(colnames(data))) > (chunk_size * 1.5)) {
+        sum_data <- as.data.frame(as.matrix(data[, 1:cells_num]))
+        sum_data <- t(sum_data)
+        sum_data <- rowsum(sum_data, group = rownames(sum_data))
+        sum_data <- t(sum_data)
+      } else if (batch == subset_num & round(length(colnames(data))) > (chunk_size * 1.5)) {
+        sum_data_tmp <- as.data.frame(as.matrix(data[, (((batch - 1) * cells_num) + 1):length(colnames(data))]))
+        print((((batch - 1) * cells_num) + 1))
+        print(length(colnames(data)))
+        sum_data_tmp <- t(sum_data_tmp)
+        sum_data_tmp <- rowsum(sum_data_tmp, group = rownames(sum_data_tmp))
+        sum_data_tmp <- t(sum_data_tmp)
+        sum_data <- cbind(sum_data, sum_data_tmp)
+        rm(sum_data_tmp)
+        sum_data <- as.data.frame(sum_data)
+        sum_data <- t(sum_data)
+        sum_data <- rowsum(sum_data, group = rownames(sum_data))
+        sum_data <- t(sum_data)
+        sum_data <- sum_data[, order(colnames(sum_data))]
+        sum_data <- as.data.frame(sum_data)
+      } else if (batch > 1 & batch < subset_num & round(length(colnames(data))) > (chunk_size * 1.5)) {
+        sum_data_tmp <- as.data.frame(as.matrix(data[, (((batch - 1) * cells_num) + 1):(batch * cells_num)]))
+        print((((batch - 1) * cells_num) + 1))
+        print(batch * cells_num)
+        sum_data_tmp <- t(sum_data_tmp)
+        sum_data_tmp <- rowsum(sum_data_tmp, group = rownames(sum_data_tmp))
+        sum_data_tmp <- t(sum_data_tmp)
+        sum_data <- cbind(sum_data, sum_data_tmp)
+        rm(sum_data_tmp)
+      }
+    }
+  }
+
+  if (round(length(colnames(data))) <= (chunk_size * 1.5)) {
+    sum_data <- as.data.frame(as.matrix(data))
+    rm(data)
+    sum_data <- t(sum_data)
+    sum_data <- rowsum(sum_data, group = rownames(sum_data))
+    sum_data <- t(sum_data)
+    sum_data <- sum_data[, order(colnames(sum_data))]
+    sum_data <- as.data.frame(sum_data)
+  }
+
+  sum_data <- t(sum_data)
+
+  sum_data <- as.data.frame(sum_data)
+
+  cols_to_fix <- colnames(sum_data) != back_col
+
+  colnames(sum_data)[cols_to_fix] <- remove_makeunique_suffix(colnames(sum_data)[cols_to_fix])
+
+  return(sum_data)
+}
+
+
 
 
 cluster_naming <- function(matrix_a, markers) {
@@ -351,15 +434,13 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
   #############################################################################
   # Class & Subclass naming
 
-
+  sparse_matrix <- scale_reduced_names(sparse_matrix)
 
   if (!FALSE %in% unique(grepl("[^0-9]", colnames(sparse_matrix)))) {
     agg_subclasses <- aggregation_chr(sparse_matrix, chunk_size = chunk_size)
   } else {
     agg_subclasses <- aggregation_num(sparse_matrix, chunk_size = chunk_size)
   }
-
-
 
 
   for (n in names(sc_project@names)) {
@@ -369,7 +450,6 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
       break
     }
   }
-
 
 
   matching_df <- data.frame(
@@ -749,9 +829,9 @@ genes_variance_calculate <- function(data, min = 0.1) {
 #'   - Validates the `type` parameter.
 #'   - Extracts the relevant cluster labels.
 #'   - Iterates over each cluster to compute:
-#'     - The proportion of cells expressing each gene.
-#'     - The log fold change (logFC) between the target cluster and the rest.
-#'     - Statistical significance (Wilcoxon test p-values).
+#'   - The proportion of cells expressing each gene.
+#'   - The log fold change (logFC) between the target cluster and the rest.
+#    - Statistical significance (Wilcoxon test p-values) with Bonferroni and Benjamini-Hochberg corrections
 #'   - Saves results in the appropriate metadata slot of `sc_project`.
 #'
 #' @examples
@@ -823,6 +903,12 @@ get_cluster_stats <- function(sc_project, type = NaN, only_pos = TRUE, min_pct =
       })
     }
     tmp_results$cluster <- c
+    tmp_results <- tmp_results %>%
+      mutate(
+        p_adj_bf = p.adjust(p_val, method = "bonferroni"),
+        p_adj_bh = p.adjust(p_val, method = "BH")
+      )
+
     results <- rbind(results, tmp_results)
   }
 
@@ -2044,6 +2130,7 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
   sparse_matrix <- sc_project@matrices$norm
 
 
+
   for (n in names(sc_project@names)) {
     tmp_names <- sc_project@names[[n]]
     if (unique((unique(cluster_heterogeneity_markers$cluster) %in% tmp_names))) {
@@ -2054,6 +2141,8 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 
 
   colnames(sparse_matrix) <- new_names
+
+  sparse_matrix <- scale_reduced_names(sparse_matrix)
 
 
   if (FALSE %in% unique(grepl("[^0-9]", colnames(sparse_matrix)))) {
