@@ -1699,7 +1699,7 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
 
 
 
-  colnames(complete_df) <- c("loss_val", "perc_1", "avg_exp", "perc_multi", "hf", "adj_hf", "cluster")
+  colnames(complete_df) <- c("loss_val", "perc_1", "avg_exp", "perc_multi", "hf", "adj_hf", "cluster", "combinations")
   cat("\n\n The CSSG finish \n")
 
   options(old_warn)
