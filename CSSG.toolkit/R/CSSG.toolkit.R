@@ -211,7 +211,7 @@ cssg_naming <- function(sparse_matrix, CSSG_df, species = "Homo sapiens") {
     sub_cssg <- CSSG_df[CSSG_df$cluster %in% cluster, ]
     sub_cssg <- sub_cssg[sub_cssg$`loss_val` == min(sub_cssg$`loss_val`), ]
     sub_cssg <- sub_cssg[order(sub_cssg$`adj_hf`, decreasing = TRUE), ]
-    tmp <- sparse_matrix[rownames(sparse_matrix) %in% gsub(" ", "", strsplit(rownames(sub_cssg)[1], split = " ")[[1]]), ]
+    tmp <- sparse_matrix[rownames(sparse_matrix) %in% gsub(" ", "", strsplit(sub_cssg$combinations[1], split = " ")[[1]]), ]
     tmp <- as.matrix(tmp)
 
     for (i in 1:length(colnames(tmp))) {
@@ -1541,13 +1541,15 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
     # first results
 
 
-    approved_df <- rbind(approved_df, last_df[last_df$perc0 <= loss_val, , drop = FALSE])
+    approved_df <- rbind(approved_df, last_df[last_df$perc0 <= loss_val & !rownames(last_df) %in% rownames(approved_df), , drop = FALSE])
 
     if (nrow(approved_df) > 0) {
       approved_df_tmp <- approved_df
       approved_df_tmp$het <- (1 - ((approved_df_tmp$perc1 + ((1 - (approved_df_tmp$perc1 + approved_df_tmp$perc0)) * 1.25)) / (str_count(string = rownames(approved_df_tmp), pattern = " ") + 1)))
       approved_df_tmp$het_adj <- (1 - ((approved_df_tmp$perc1 + ((1 - (approved_df_tmp$perc1 + approved_df_tmp$perc0)) * 1.25)) / (str_count(string = rownames(approved_df_tmp), pattern = " ") + 1))) - (approved_df_tmp$perc0 * 2)
       approved_df_tmp$cluster <- cluster
+
+      approved_df_tmp$combinations <- rownames(approved_df_tmp)
 
       complete_df <- rbind(approved_df_tmp, complete_df)
 
@@ -1639,11 +1641,11 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
 
 
       if (final_df$perc0[order(final_df$perc0, decreasing = FALSE)][1] == 0) {
-        approved_df <- rbind(approved_df, final_df[final_df$perc0 == 0 & final_df$multi < 0.20, , drop = FALSE])
+        approved_df <- rbind(approved_df, final_df[final_df$perc0 == 0 & final_df$multi < 0.20 & !rownames(final_df) %in% rownames(approved_df), , drop = FALSE])
         to_exclude <- rownames(final_df)[final_df$perc0 == 0 & final_df$multi < 0.20]
         res_df <- res_df[!rownames(res_df) %in% to_exclude, , drop = FALSE]
       } else if (final_df$perc0[order(final_df$perc0, decreasing = FALSE)][1] < as.numeric(loss_val)) {
-        approved_df <- rbind(approved_df, final_df[final_df$perc0 <= as.numeric(loss_val), , drop = FALSE])
+        approved_df <- rbind(approved_df, final_df[final_df$perc0 <= as.numeric(loss_val) & !rownames(final_df) %in% rownames(approved_df), , drop = FALSE])
       }
 
 
@@ -1654,24 +1656,30 @@ CSSG_markers <- function(sc_project, max_combine = 1000, loss_val = 0.05) {
         approved_df$het_adj <- (1 - ((approved_df$perc1 + ((1 - (approved_df$perc1 + approved_df$perc0)) * 1.25)) / (str_count(string = rownames(approved_df), pattern = " ") + 1))) - (approved_df$perc0 * 2)
         approved_df$cluster <- cluster
 
+        approved_df$combinations <- rownames(approved_df)
+
         complete_df <- rbind(approved_df, complete_df)
 
         break
       } else if (nrow(res_df) == 0) {
-        approved_df <- rbind(approved_df, final_df[final_df$perc0 <= quantile(final_df$perc0, 0.25), , drop = FALSE])
+        approved_df <- rbind(approved_df, final_df[final_df$perc0 <= quantile(final_df$perc0, 0.25) & !rownames(final_df) %in% rownames(approved_df), , drop = FALSE])
         approved_df$het <- (1 - ((approved_df$perc1 + ((1 - (approved_df$perc1 + approved_df$perc0)) * 1.25)) / (str_count(string = rownames(approved_df), pattern = " ") + 1)))
         approved_df$het_adj <- (1 - ((approved_df$perc1 + ((1 - (approved_df$perc1 + approved_df$perc0)) * 1.25)) / (str_count(string = rownames(approved_df), pattern = " ") + 1))) - (approved_df$perc0 * 2)
         approved_df$cluster <- cluster
+
+        approved_df$combinations <- rownames(approved_df)
 
         complete_df <- rbind(approved_df, complete_df)
 
         break
       } else if (is.data.frame(tmp_recursive)) {
         if ((min(tmp_recursive$perc0) == min(final_df$perc0)) & (min(tmp_recursive & multi) <= min(final_df$multi))) {
-          approved_df <- rbind(approved_df, tmp_recursive[tmp_recursive$perc0 <= quantile(tmp_recursive$perc0, 0.25), , drop = FALSE])
+          approved_df <- rbind(approved_df, tmp_recursive[tmp_recursive$perc0 <= quantile(tmp_recursive$perc0, 0.25) & !rownames(tmp_recursive) %in% rownames(approved_df), , drop = FALSE])
           approved_df$het <- (1 - ((approved_df$perc1 + ((1 - (approved_df$perc1 + approved_df$perc0)) * 1.25)) / (str_count(string = rownames(approved_df), pattern = " ") + 1)))
           approved_df$het_adj <- (1 - ((approved_df$perc1 + ((1 - (approved_df$perc1 + approved_df$perc0)) * 1.25)) / (str_count(string = rownames(approved_df), pattern = " ") + 1))) - (approved_df$perc0 * 2)
           approved_df$cluster <- cluster
+
+          approved_df$combinations <- rownames(approved_df)
 
           complete_df <- rbind(approved_df, complete_df)
 
