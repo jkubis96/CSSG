@@ -401,12 +401,22 @@ bin_cell_test <- function(names, p_val, min_cells = 10) {
 
 
   for (n in 1:length(data$n)) {
-    bin <- binom.test(data$n[n], ceiling(sum(data$n) / 2),
-      p = median(data$n) / sum(data$n),
-      conf.level = 0.9, alternative = "greater"
+    bin <- tryCatch(
+      {
+        binom.test(
+          data$n[n],
+          ceiling(sum(data$n) / 2),
+          p = median(data$n) / sum(data$n),
+          conf.level = 0.9,
+          alternative = "greater"
+        )$p.value
+      },
+      error = function(e) {
+        0
+      }
     )
 
-    data$p_val[n] <- bin$p.value
+    data$p_val[n] <- bin
   }
 
 
