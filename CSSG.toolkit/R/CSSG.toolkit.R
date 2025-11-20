@@ -225,9 +225,9 @@ cssg_naming <- function(sparse_matrix, CSSG_df, species = "Homo sapiens") {
   }
 
   if (toupper(species) == "HOMO SAPIENS") {
-    cell_names <- toupper(cell_names)
+    cell_names <- as.character(toupper(cell_names))
   } else {
-    cell_names <- firstup(cell_names)
+    cell_names <- as.character(firstup(cell_names))
   }
 
   return(cell_names)
@@ -292,7 +292,7 @@ subcluster_naming <- function(average_expression, markers_subclass, cell_markers
     cell_names.2 <- firstup(tolower(cell_names.2))
   }
 
-  sub_names <- paste(cell_names.1, cell_names.2)
+  sub_names <- as.character(paste(cell_names.1, cell_names.2))
 
 
   return(sub_names)
@@ -548,7 +548,7 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
 
 
 
-  sc_project@names$repaired <- list("renamed_idents" = names_to_return, "original_names" = sc_project@names$subtypes)
+  sc_project@names$repaired <- list("renamed_idents" = as.character(names_to_return), "original_names" = as.character(sc_project@names$subtypes))
 
   sc_project@names$subtypes <- as.character(names_to_return)
 
@@ -1757,7 +1757,7 @@ marker_heatmap <- function(sc_project,
 
   data <- get_avg_data(sc_project = sc_project, type = type, data = "norm", chunk_size = 5000)
 
-  data <- data[toupper(rownames(data)) %in% markers, , drop = FALSE]
+  data <- data[toupper(rownames(data)) %in% toupper(markers), , drop = FALSE]
 
   if (scale) {
     data <- data %>%
