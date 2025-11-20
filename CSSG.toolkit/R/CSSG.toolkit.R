@@ -339,7 +339,7 @@ subtypes_naming <- function(sc_project, markers_class = NULL, markers_subclass =
     names_to_return <- paste0(primary_names, " - ", cell_names)
 
 
-    sc_project@names$subtypes <- names_to_return
+    sc_project@names$subtypes <- as.character(names_to_return)
 
 
     sc_project <- name_repairing(
@@ -550,7 +550,7 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
 
   sc_project@names$repaired <- list("renamed_idents" = names_to_return, "original_names" = sc_project@names$subtypes)
 
-  sc_project@names$subtypes <- names_to_return
+  sc_project@names$subtypes <- as.character(names_to_return)
 
   return(sc_project)
 }
@@ -2235,7 +2235,7 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
   )
 
 
-  sc_project@names$subclass <- matching_df$new[match(names_to_return, matching_df$old)]
+  sc_project@names$subclass <- as.character(matching_df$new[match(names_to_return, matching_df$old)])
 
   return(sc_project)
 }
