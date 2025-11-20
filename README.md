@@ -38,10 +38,13 @@ A comprehensive toolkit providing methods for naming cell clusters, identifying 
 
 <br />
 
-#### Installation
+#### Installation from GitHub
 
 ```
-install.packages("https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.0.tar.gz", repos = NULL, type = "source")
+remotes::install_url(
+  "https://github.com/jkubis96/CSSG/raw/refs/heads/main/packages/CSSG.toolkit_0.1.2.tar.gz",
+  dependencies = TRUE
+)
 ```
 <br />
 
