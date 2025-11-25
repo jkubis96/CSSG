@@ -472,6 +472,7 @@ cell_stat_graph <- function(data, include_ns = TRUE) {
 
 
 
+
 name_repairing <- function(sc_project, markers_class, markers_subclass, species, chunk_size = 5000) {
   sparse_matrix <- sc_project@matrices$norm
 
@@ -497,6 +498,7 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
     agg_subclasses <- aggregation_num(sparse_matrix, chunk_size = chunk_size)
   }
 
+  old_names_subtypes <- as.character(colnames(agg_subclasses))
 
   for (n in names(sc_project@names)) {
     tmp_names <- sc_project@names[[n]]
@@ -528,11 +530,9 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
   # Repair subclass_names
 
   clust_names <- paste(clust_names, cell_names_2)
-  names_to_return <- new_names
-
 
   matching_df <- data.frame(
-    old = as.character(colnames(agg_subclasses)),
+    old = old_names_subtypes,
     new = clust_names
   )
 
@@ -540,7 +540,7 @@ name_repairing <- function(sc_project, markers_class, markers_subclass, species,
 
 
 
-  names_to_return <- matching_df$new[match(names_to_return, matching_df$old)]
+  names_to_return <- matching_df$new[match(sc_project@names$subtypes, matching_df$old)]
 
 
 
@@ -2236,11 +2236,13 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 
   tmp_names <- as.character(matching_df$new[match(names_to_return, matching_df$old)])
 
-  tmp_names[grepl(' NA ', tmp_names)] <- 'Undefined'
+  tmp_names[grepl(" NA ", tmp_names)] <- "Undefined"
 
-  idx <- substr(tmp_names,
-                nchar(tmp_names) - 2,
-                nchar(tmp_names)) == " NA"
+  idx <- substr(
+    tmp_names,
+    nchar(tmp_names) - 2,
+    nchar(tmp_names)
+  ) == " NA"
 
   tmp_names[idx] <- "Undefined"
 
@@ -2369,14 +2371,13 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
   # return upper markers for naming if any significant
 
   if (extend_missing) {
-
     names_in_data <- sort(as.character(unique(sc_project@names[[type]])))
     names_in_naming_data <- sort(as.character(unique(marker_clean$cluster)))
 
     if (!identical(names_in_data, names_in_naming_data)) {
       missing_in_naming <- setdiff(names_in_data, names_in_naming_data)
       tmp_markers <- marker_clean
-      tmp_markers <- tmp_markers[tmp_markers$cluster %in% missing_in_naming,]
+      tmp_markers <- tmp_markers[tmp_markers$cluster %in% missing_in_naming, ]
       tmp_markers <- tmp_markers %>%
         arrange(cluster, desc(pct_occurrence), desc(esm)) %>%
         group_by(cluster) %>%
@@ -2387,7 +2388,6 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
 
       rm(tmp_markers)
     }
-
   }
 
   sc_project@metadata$naming_markers <- marker_clean
