@@ -77,7 +77,7 @@ test_that("cluster stats", {
 })
 
 
-sc_project <- namign_genes_selection(sc_project,
+sc_project <- naming_genes_selection(sc_project,
   type = "primary", top_n = 25,
   p_val = 0.05, select_stat = "p_val",
   mito_content = FALSE, ribo_content = FALSE

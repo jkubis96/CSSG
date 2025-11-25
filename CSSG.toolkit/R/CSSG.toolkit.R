@@ -1274,8 +1274,6 @@ heterogeneity_select_variance <- function(sc_project,
   }
 
 
-
-
   value_counts <- table(full_data$gene)
   value_counts <- data.frame(
     valuename = names(value_counts),
@@ -1310,7 +1308,7 @@ heterogeneity_select_variance <- function(sc_project,
 
   row_percent <- data.frame(
     gene = rownames(sparse_matrix_bin),
-    percent = rowSums(sparse_matrix_bin) / ncol(sparse_matrix_bin) * 100
+    percent = rowSums(as.matrix(sparse_matrix_bin)) / ncol(sparse_matrix_bin) * 100
   )
 
 
@@ -1321,10 +1319,10 @@ heterogeneity_select_variance <- function(sc_project,
 
 
   for (c in unique(full_2$cluster)) {
-    tmp <- full_2[full_2$cluster %in% c, , drop = FALSE]
-    tmp <- tmp[!tmp$gene %in% to_rm, , drop = FALSE]
+    tmp <- as.data.frame(full_2[full_2$cluster %in% c, , drop = FALSE])
+    tmp <- as.data.frame(tmp[!tmp$gene %in% to_rm, , drop = FALSE])
     if (nrow(tmp) < 10) {
-      tmp <- full_2[full_2$cluster %in% c, , drop = FALSE]
+      tmp <- as.data.frame(full_2[full_2$cluster %in% c, , drop = FALSE])
     }
 
     full_3 <- rbind(full_3, tmp)
@@ -2234,8 +2232,19 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
     new = new_names
   )
 
+  # checking unable to name subclasses and adding to Undefined
 
-  sc_project@names$subclass <- as.character(matching_df$new[match(names_to_return, matching_df$old)])
+  tmp_names <- as.character(matching_df$new[match(names_to_return, matching_df$old)])
+
+  tmp_names[grepl(' NA ', tmp_names)] <- 'Undefined'
+
+  idx <- substr(tmp_names,
+                nchar(tmp_names) - 2,
+                nchar(tmp_names)) == " NA"
+
+  tmp_names[idx] <- "Undefined"
+
+  sc_project@names$subclass <- as.character(tmp_names)
 
   return(sc_project)
 }
@@ -2261,6 +2270,9 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 #'   Default is FALSE.
 #' @param ribo_content A logical value indicating whether to include ribosomal genes.
 #'   Default is FALSE.
+#' @param extend_missing A logical value indicating whether to add non-significant genes
+#'   as names when none are found. If TRUE and no such genes are available, the top 5 genes
+#'   by effect size will be added. Default is TRUE.
 #'
 #' @return An updated `sc_project` object with selected naming marker genes stored
 #'   in the `metadata$naming_markers` slot.
@@ -2275,17 +2287,19 @@ subclass_naming <- function(sc_project, class_markers = NULL, subclass_markers =
 #'   - Ensures each cluster retains at least two marker genes.
 #'
 #' @examples
-#' sc_project <- namign_genes_selection(sc_project,
+#' sc_project <- naming_genes_selection(sc_project,
 #'   type = "primary",
 #'   top_n = 25,
 #'   p_val = 0.05,
 #'   mito_content = FALSE,
-#'   ribo_content = FALSE
+#'   ribo_content = FALSE,
+#'   extend_missing = TRUE
 #' )
 #'
 #' @export
-namign_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_val = 0.05,
-                                   select_stat = "p_val", mito_content = FALSE, ribo_content = FALSE) {
+naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_val = 0.05,
+                                   select_stat = "p_val", mito_content = FALSE,
+                                   ribo_content = FALSE, extend_missing = TRUE) {
   set.seed(123)
 
   if (!type %in% c("subtypes", "subclasses", "cluster", "primary")) {
@@ -2351,6 +2365,32 @@ namign_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
       }
     }) %>%
     ungroup()
+
+  # return upper markers for naming if any significant
+
+  if (extend_missing) {
+
+    names_in_data <- sort(as.character(unique(sc_project@names[[type]])))
+    names_in_naming_data <- sort(as.character(unique(marker_clean$cluster)))
+
+    if (!identical(names_in_data, names_in_naming_data)) {
+      missing_in_naming <- setdiff(names_in_data, names_in_naming_data)
+      tmp_markers <- marker_clean
+      tmp_markers <- tmp_markers[tmp_markers$cluster %in% missing_in_naming,]
+      tmp_markers <- tmp_markers %>%
+        arrange(cluster, desc(pct_occurrence), desc(esm)) %>%
+        group_by(cluster) %>%
+        slice_head(n = 5) %>%
+        ungroup()
+
+      marker_clean <- rbind(marker_clean, tmp_markers)
+
+      rm(tmp_markers)
+    }
+
+  }
+
   sc_project@metadata$naming_markers <- marker_clean
+
   return(sc_project)
 }
