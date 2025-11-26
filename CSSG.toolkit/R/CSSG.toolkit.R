@@ -726,13 +726,20 @@ aggregation_chr <- function(sparse_matrix, chunk_size = 5000) {
 #' Identifies outliers in a numeric dataset and visualizes their distribution using a histogram.
 #'
 #' @param input A numeric vector containing values to be analyzed.
-#' @return A list containing a sorted vector of detected outliers and a ggplot2 histogram visualization.
+#' @param fraction A numeric value defining the width of each threshold interval
+#' used to group the input data. The function iteratively divides the range
+#' of values into bins of size `fraction` (e.g., 50 means thresholds of 0–50,
+#' 50–100, 100–150, etc.). This parameter strongly influences how thresholds
+#' are detected and how outlier ranges are determined.
+#'
+#' @return A list containing a sorted vector of detected outlier thresholds
+#' and a ggplot2 histogram visualization.
 #'
 #' @examples
 #' outlier_data <- outlires(c(1, 5, 10, 20, 30, 100, 150, 200))
 #'
 #' @export
-outlires <- function(input) {
+outlires <- function(input, fraction = 50) {
   set.seed(123)
 
   tmp_input <- input
@@ -740,11 +747,11 @@ outlires <- function(input) {
   rang <- c()
   n <- c()
 
-  iter <- ceiling(max(tmp_input) / 10)
+  iter <- ceiling(max(tmp_input) / fraction)
   for (j in 1:iter) {
-    rang <- c(rang, j * 10)
-    n <- c(n, as.numeric(length(tmp_input[tmp_input <= j * 10])))
-    tmp_input <- tmp_input[tmp_input > j * 10]
+    rang <- c(rang, j * fraction)
+    n <- c(n, as.numeric(length(tmp_input[tmp_input <= j * fraction])))
+    tmp_input <- tmp_input[tmp_input > j * fraction]
   }
 
   df <- data.frame(rang, n)
@@ -939,24 +946,27 @@ get_cluster_stats <- function(sc_project, type = NaN, only_pos = TRUE, min_pct =
     tmp_results$esm <- (t1 - t2) / s_pooled
 
     tmp_results$avg_logFC <- log2((t1 + (min(t1[t1 > 0]) / 2)) / (t2 +
-      (min(t2[t2 > 0]) / 2)))
+                                                                    (min(t2[t2 > 0]) / 2)))
     tmp_results <- tmp_results[tmp_results$pct_occurrence >
-      min_pct, , drop = FALSE]
+                                 min_pct, , drop = FALSE]
     if (only_pos == TRUE) {
       tmp_results <- tmp_results[tmp_results$avg_logFC >
-        0, ]
+                                   0, ]
       tmp_data <- data[match(tmp_results$genes, rownames(data)), ]
       tmp_results$p_val <- apply(tmp_data, 1, function(gene_expression) {
         wilcox.test(gene_expression[colnames(tmp_data) %in%
-          c], gene_expression[!colnames(tmp_data) %in%
-          c])$p.value
+                                      c], gene_expression[!colnames(tmp_data) %in%
+                                                            c])$p.value
       })
     } else {
       tmp_results$p_val <- apply(data, 1, function(gene_expression) {
         wilcox.test(gene_expression[colnames(data) %in%
-          c], gene_expression[!colnames(data) %in% c])$p.value
+                                      c], gene_expression[!colnames(data) %in% c])$p.value
       })
     }
+
+    if (nrow(tmp_results) == 0) next
+
     tmp_results$cluster <- c
     tmp_results <- tmp_results %>%
       mutate(

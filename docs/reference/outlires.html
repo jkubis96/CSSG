@@ -44,7 +44,7 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">outlires</span><span class="op">(</span><span class="va">input</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">outlires</span><span class="op">(</span><span class="va">input</span>, fraction <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -54,10 +54,19 @@
 <dl><dt id="arg-input">input<a class="anchor" aria-label="anchor" href="#arg-input"></a></dt>
 <dd><p>A numeric vector containing values to be analyzed.</p></dd>
 
+
+<dt id="arg-fraction">fraction<a class="anchor" aria-label="anchor" href="#arg-fraction"></a></dt>
+<dd><p>A numeric value defining the width of each threshold interval
+used to group the input data. The function iteratively divides the range
+of values into bins of size `fraction` (e.g., 50 means thresholds of 0–50,
+50–100, 100–150, etc.). This parameter strongly influences how thresholds
+are detected and how outlier ranges are determined.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>A list containing a sorted vector of detected outliers and a ggplot2 histogram visualization.</p>
+    <p>A list containing a sorted vector of detected outlier thresholds
+and a ggplot2 histogram visualization.</p>
     </div>
 
     <div id="ref-examples">

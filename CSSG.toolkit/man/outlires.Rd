@@ -4,13 +4,20 @@
 \alias{outlires}
 \title{Outlier Detection and Visualization}
 \usage{
-outlires(input)
+outlires(input, fraction = 50)
 }
 \arguments{
 \item{input}{A numeric vector containing values to be analyzed.}
+
+\item{fraction}{A numeric value defining the width of each threshold interval
+used to group the input data. The function iteratively divides the range
+of values into bins of size `fraction` (e.g., 50 means thresholds of 0–50,
+50–100, 100–150, etc.). This parameter strongly influences how thresholds
+are detected and how outlier ranges are determined.}
 }
 \value{
-A list containing a sorted vector of detected outliers and a ggplot2 histogram visualization.
+A list containing a sorted vector of detected outlier thresholds
+and a ggplot2 histogram visualization.
 }
 \description{
 Identifies outliers in a numeric dataset and visualizes their distribution using a histogram.
