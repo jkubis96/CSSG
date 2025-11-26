@@ -945,25 +945,43 @@ get_cluster_stats <- function(sc_project, type = NaN, only_pos = TRUE, min_pct =
     s_pooled <- sqrt(((n1 - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2))
     tmp_results$esm <- (t1 - t2) / s_pooled
 
-    tmp_results$avg_logFC <- log2((t1 + (min(t1[t1 > 0]) / 2)) / (t2 +
-                                                                    (min(t2[t2 > 0]) / 2)))
-    tmp_results <- tmp_results[tmp_results$pct_occurrence >
-                                 min_pct, , drop = FALSE]
+    min1 <- min(t1[t1 > 0])
+    min2 <- min(t2[t2 > 0])
+
+    min_factor <- min(min1, min2) / 2
+
+    min_factor <- max(min_factor, .Machine$double.xmin)
+
+    tmp_results$avg_logFC <- log2((t1 + min_factor) / (t2 + min_factor))
+
     if (only_pos == TRUE) {
       tmp_results <- tmp_results[tmp_results$avg_logFC >
-                                   0, ]
+        0, ]
       tmp_data <- data[match(tmp_results$genes, rownames(data)), ]
       tmp_results$p_val <- apply(tmp_data, 1, function(gene_expression) {
         wilcox.test(gene_expression[colnames(tmp_data) %in%
-                                      c], gene_expression[!colnames(tmp_data) %in%
-                                                            c])$p.value
+          c], gene_expression[!colnames(tmp_data) %in%
+          c])$p.value
       })
     } else {
       tmp_results$p_val <- apply(data, 1, function(gene_expression) {
         wilcox.test(gene_expression[colnames(data) %in%
-                                      c], gene_expression[!colnames(data) %in% c])$p.value
+          c], gene_expression[!colnames(data) %in% c])$p.value
       })
     }
+
+    check_tmp <- tmp_results[tmp_results$pct_occurrence >
+      min_pct, , drop = FALSE]
+
+    if (nrow(check_tmp) < 10) {
+      tmp_results <- tmp_results[tmp_results$pct_occurrence >
+        0, , drop = FALSE]
+      tmp_results <- tmp_results[order(tmp_results$p_val, -tmp_results$esm), ]
+      tmp_results <- head(tmp_results, 50)
+    } else {
+      tmp_results <- check_tmp
+    }
+
 
     if (nrow(tmp_results) == 0) next
 
@@ -2326,16 +2344,37 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
   } else if (type == "primary") {
     markers <- sc_project@metadata$primary_markers
   }
+
+  if (extend_missing) {
+    markers <- markers %>%
+      group_by(cluster) %>%
+      group_modify(~ {
+        filtered <- .x %>% filter(p_val < p_val)
+        if (nrow(filtered) < 20) {
+          top_markers <- .x %>%
+            arrange(p_val, desc(esm)) %>%
+            slice_head(n = 20)
+          return(top_markers)
+        } else {
+          return(filtered)
+        }
+      }) %>%
+      ungroup()
+  } else {
+    markers <- markers[markers$p_val < p_val]
+  }
+
   if (mito_content == FALSE) {
     markers <- markers %>%
       group_by(cluster) %>%
       group_modify(~ {
         mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
         cleaned <- .x[!mt_idx, , drop = FALSE]
-        if (nrow(cleaned) == 0) {
-          return(.x[mt_idx, , drop = FALSE])
+        filtered <- cleaned %>% filter(p_val < p_val)
+        if (nrow(filtered) < 2) {
+          return(.x)
         } else {
-          return(cleaned)
+          return(filtered)
         }
       }) %>%
       ungroup()
@@ -2346,16 +2385,17 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
       group_modify(~ {
         ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
         cleaned <- .x[!ribo_idx, , drop = FALSE]
-        if (nrow(cleaned) == 0) {
-          return(.x[ribo_idx, , drop = FALSE])
+        filtered <- cleaned %>% filter(p_val < p_val)
+        if (nrow(filtered) < 2) {
+          return(.x)
         } else {
-          return(cleaned)
+          return(filtered)
         }
       }) %>%
       ungroup()
   }
-  marker_df <- markers[markers$p_val < p_val, ]
-  marker_df <- marker_df %>%
+
+  marker_df <- markers %>%
     group_by(cluster) %>%
     arrange(
       desc(pct_occurrence), desc(esm),
@@ -2368,37 +2408,16 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
     group_by(cluster) %>%
     group_modify(~ {
       cleaned <- .x %>% filter(!genes %in% dup_genes)
-      if (nrow(cleaned) < 2) {
+      if (nrow(cleaned) < 10) {
         .x %>%
           arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
-          slice_head(n = 2)
+          slice_head(n = 10)
       } else {
         cleaned
       }
     }) %>%
     ungroup()
 
-  # return upper markers for naming if any significant
-
-  if (extend_missing) {
-    names_in_data <- sort(as.character(unique(sc_project@names[[type]])))
-    names_in_naming_data <- sort(as.character(unique(marker_clean$cluster)))
-
-    if (!identical(names_in_data, names_in_naming_data)) {
-      missing_in_naming <- setdiff(names_in_data, names_in_naming_data)
-      tmp_markers <- marker_clean
-      tmp_markers <- tmp_markers[tmp_markers$cluster %in% missing_in_naming, ]
-      tmp_markers <- tmp_markers %>%
-        arrange(cluster, desc(pct_occurrence), desc(esm)) %>%
-        group_by(cluster) %>%
-        slice_head(n = 5) %>%
-        ungroup()
-
-      marker_clean <- rbind(marker_clean, tmp_markers)
-
-      rm(tmp_markers)
-    }
-  }
 
   sc_project@metadata$naming_markers <- marker_clean
 
