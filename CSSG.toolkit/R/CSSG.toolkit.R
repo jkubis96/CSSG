@@ -1789,8 +1789,9 @@ marker_heatmap <- function(sc_project,
     # data <- data %>%
     #   mutate(across(where(is.numeric), ~ (. - min(.)) / (max(.) - min(.))))
 
-    data <- data %>%
-      mutate_if(is.numeric, ~ (. - min(.)) / (max(.) - min(.)))
+    data <- apply(data, 2, function(x) {
+      (x - min(x)) / (max(x) - min(x))
+    })
   }
 
   pheat <- pheatmap::pheatmap(
