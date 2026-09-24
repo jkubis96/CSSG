@@ -1786,8 +1786,11 @@ marker_heatmap <- function(sc_project,
   data <- data[toupper(rownames(data)) %in% toupper(markers), , drop = FALSE]
 
   if (scale) {
+    # data <- data %>%
+    #   mutate(across(where(is.numeric), ~ (. - min(.)) / (max(.) - min(.))))
+
     data <- data %>%
-      mutate(across(where(is.numeric), ~ (. - min(.)) / (max(.) - min(.))))
+      mutate_if(is.numeric, ~ (. - min(.)) / (max(.) - min(.)))
   }
 
   pheat <- pheatmap::pheatmap(
@@ -2353,7 +2356,8 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
         if (nrow(filtered) < 20) {
           top_markers <- .x %>%
             arrange(p_val, desc(esm)) %>%
-            slice_head(n = 20)
+            # slice_head(n = 20)
+            slice(1:20)
           return(top_markers)
         } else {
           return(filtered)
@@ -2364,36 +2368,109 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
     markers <- markers[markers$p_val < p_val]
   }
 
+  # if (extend_missing) {
+  #   markers_list <- split(markers, markers$cluster)
+  #   markers_list <- lapply(markers_list, function(.x) {
+  #     filtered <- .x %>% filter(p_val < p_val)
+  #     if (nrow(filtered) < 20) {
+  #       top_markers <- .x %>%
+  #         arrange(p_val, desc(esm)) %>%
+  #         slice(1:20)
+  #       return(top_markers)
+  #     } else {
+  #       return(filtered)
+  #     }
+  #   })
+  #   markers <- bind_rows(markers_list)
+  # } else {
+  #   markers <- markers[markers$p_val < p_val, ]
+  # }
+
+  # back compatybility
+  if (extend_missing) {
+    markers_list <- split(markers, markers$cluster)
+    markers_list <- lapply(markers_list, function(.x) {
+      filtered <- .x %>% filter(p_val < p_val)
+      if (nrow(filtered) < 20) {
+        top_markers <- .x %>%
+          arrange(p_val, desc(esm)) %>%
+          slice(1:20)
+        return(top_markers)
+      } else {
+        return(filtered)
+      }
+    })
+    markers <- bind_rows(markers_list)
+  } else {
+    markers <- markers[markers$p_val < p_val, ]
+  }
+
+
+
+  # if (mito_content == FALSE) {
+  #   markers <- markers %>%
+  #     group_by(cluster) %>%
+  #     group_modify(~ {
+  #       mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
+  #       cleaned <- .x[!mt_idx, , drop = FALSE]
+  #       filtered <- cleaned %>% filter(p_val < p_val)
+  #       if (nrow(filtered) < 2) {
+  #         return(.x)
+  #       } else {
+  #         return(filtered)
+  #       }
+  #     }) %>%
+  #     ungroup()
+  # }
+
+
   if (mito_content == FALSE) {
-    markers <- markers %>%
-      group_by(cluster) %>%
-      group_modify(~ {
-        mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
-        cleaned <- .x[!mt_idx, , drop = FALSE]
-        filtered <- cleaned %>% filter(p_val < p_val)
-        if (nrow(filtered) < 2) {
-          return(.x)
-        } else {
-          return(filtered)
-        }
-      }) %>%
-      ungroup()
+    markers_list <- split(markers, markers$cluster)
+    markers_list <- lapply(markers_list, function(.x) {
+      mt_idx <- grepl("^(MT-|MT\\.)", toupper(.x$genes))
+      cleaned <- .x[!mt_idx, , drop = FALSE]
+      filtered <- cleaned %>% filter(p_val < p_val)
+      if (nrow(filtered) < 2) {
+        return(.x)
+      } else {
+        return(filtered)
+      }
+    })
+    markers <- bind_rows(markers_list)
   }
+
+
+  # if (ribo_content == FALSE) {
+  #   markers <- markers %>%
+  #     group_by(cluster) %>%
+  #     group_modify(~ {
+  #       ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
+  #       cleaned <- .x[!ribo_idx, , drop = FALSE]
+  #       filtered <- cleaned %>% filter(p_val < p_val)
+  #       if (nrow(filtered) < 2) {
+  #         return(.x)
+  #       } else {
+  #         return(filtered)
+  #       }
+  #     }) %>%
+  #     ungroup()
+  # }
+
   if (ribo_content == FALSE) {
-    markers <- markers %>%
-      group_by(cluster) %>%
-      group_modify(~ {
-        ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
-        cleaned <- .x[!ribo_idx, , drop = FALSE]
-        filtered <- cleaned %>% filter(p_val < p_val)
-        if (nrow(filtered) < 2) {
-          return(.x)
-        } else {
-          return(filtered)
-        }
-      }) %>%
-      ungroup()
+    markers_list <- split(markers, markers$cluster)
+    markers_list <- lapply(markers_list, function(.x) {
+      ribo_idx <- grepl("^(RPS|RPL|MRPL|MRPS|RS-)", toupper(.x$genes))
+      cleaned <- .x[!ribo_idx, , drop = FALSE]
+      filtered <- cleaned %>% filter(p_val < p_val)
+      if (nrow(filtered) < 2) {
+        return(.x)
+      } else {
+        return(filtered)
+      }
+    })
+    markers <- bind_rows(markers_list)
   }
+
 
   marker_df <- markers %>%
     group_by(cluster) %>%
@@ -2401,23 +2478,41 @@ naming_genes_selection <- function(sc_project, type = "primary", top_n = 25, p_v
       desc(pct_occurrence), desc(esm),
       desc(avg_logFC)
     ) %>%
-    slice_head(n = top_n)
+    # slice_head(n = top_n)
+    slice(1:top_n)
   dup_genes <- marker_df$genes[duplicated(marker_df$genes) |
     duplicated(marker_df$genes, fromLast = TRUE)]
-  marker_clean <- marker_df %>%
-    group_by(cluster) %>%
-    group_modify(~ {
-      cleaned <- .x %>% filter(!genes %in% dup_genes)
-      if (nrow(cleaned) < 10) {
-        .x %>%
-          arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
-          slice_head(n = 10)
-      } else {
-        cleaned
-      }
-    }) %>%
-    ungroup()
 
+
+  # marker_clean <- marker_df %>%
+  #  group_by(cluster) %>%
+  #  group_modify(~ {
+  #    cleaned <- .x %>% filter(!genes %in% dup_genes)
+  #    if (nrow(cleaned) < 10) {
+  #      .x %>%
+  #        arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
+  #        # slice_head(n = 10)
+  #        slice(1:10)
+  #    } else {
+  #      cleaned
+  #    }
+  #  }) %>%
+  #  ungroup()
+
+
+  # back compatybility
+  marker_list_clean <- split(marker_df, marker_df$cluster)
+  marker_list_clean <- lapply(marker_list_clean, function(.x) {
+    cleaned <- .x %>% filter(!genes %in% dup_genes)
+    if (nrow(cleaned) < 10) {
+      .x %>%
+        arrange(desc(pct_occurrence), p_val, desc(avg_logFC)) %>%
+        slice(1:10)
+    } else {
+      cleaned
+    }
+  })
+  marker_clean <- bind_rows(marker_list_clean)
 
   sc_project@metadata$naming_markers <- marker_clean
 
